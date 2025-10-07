@@ -1,0 +1,38 @@
+npx expo start --clear
+
+uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+
+동일 wifi 접속해야 함.
+config 폴더 안 api.ts 파일에서 ip 수정필요 + 아래에 ip 목록에 추가도
+
+# GIt 로그 확인
+git log --oneline
+
+# Git 커밋
+git add . 
+
+# Git 메시지
+git commit -m "메시지"
+
+# 이전 커밋으로 되돌리기
+git reset --hard [코드 이름 a2c41ee]
+
+
+search.py:
+* FAISS 인덱스 로딩
+* 문서 검색 수행
+* 임베딩 생성
+conversation.py:
+* 대화 상태 관리
+* 구체성 판단
+* 추가 질문 np생성
+* 문맥 유지
+generator.py:
+* GPT API 호출
+* 답변 생성
+* 구체성 판단
+* 추가 질문 생성
+main.py:
+* 메인 인터페이스
+* chat_with_ai() 함수
+* return_solution() 함수
