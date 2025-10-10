@@ -22,22 +22,34 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 3. 환경 변수 설정
 
-   Google Custom Search API를 사용하기 위해 다음 환경 변수를 설정해야 합니다:
+   프로젝트 루트에 `.env` 파일을 생성하고 다음 내용을 추가하세요:
 
-   bash
+   ```
+   # API Keys Configuration
+   # 이 파일은 절대 Git에 업로드하지 마세요!
+
    # Google Custom Search API 설정
-   export GOOGLE_SEARCH_API_KEY=your_key
-   export GOOGLE_SEARCH_ENGINE_ID=your_ID
-   
-   # OpenAI API 키 (기존 NLP 기능용)
-   export OPENAI_API_KEY=your_key
+   GOOGLE_SEARCH_API_KEY=your_google_search_api_key_here
+   GOOGLE_SEARCH_ENGINE_ID=your_google_search_engine_id_here
+
+   # OpenAI API 키 (NLP 기능용)
+   OPENAI_API_KEY=your_openai_api_key_here
+   ```
+
+   **중요**: `.env` 파일은 이미 `.gitignore`에 포함되어 있어 Git에 업로드되지 않습니다.
    
 r
-   **Google Custom Search API 설정 방법:**
+   **API 키 발급 방법:**
+   
+   **Google Custom Search API:**
    1. [Google Cloud Console](https://console.cloud.google.com/apis/library/customsearch.googleapis.com)에서 Custom Search API를 활성화
-   2. API 키를 발급받아 `GOOGLE_SEARCH_API_KEY`에 설정
+   2. API 키를 발급받아 `.env` 파일의 `GOOGLE_SEARCH_API_KEY`에 설정
    3. [Google Custom Search Engine](https://cse.google.com/cse/all)에서 검색 엔진을 생성
-   4. 검색 엔진 ID를 복사하여 `GOOGLE_SEARCH_ENGINE_ID`에 설정
+   4. 검색 엔진 ID를 복사하여 `.env` 파일의 `GOOGLE_SEARCH_ENGINE_ID`에 설정
+   
+   **OpenAI API:**
+   1. [OpenAI Platform](https://platform.openai.com/api-keys)에서 API 키 발급
+   2. 발급받은 키를 `.env` 파일의 `OPENAI_API_KEY`에 설정
 
 4. Start the backend server
    ```bash

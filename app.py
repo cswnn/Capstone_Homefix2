@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from efficientnet import run_pipeline, load_model
-from nlp.main import return_solution, chat_with_ai  # ← GPT 기반 해결책 생성 함수 및 채팅 함수
+from nlp.main import return_solution, chat_with_ai, get_supplies_for_problem  # ← GPT 기반 해결책 생성 함수 및 채팅 함수
 from PIL import Image
 from pydantic import BaseModel
 import io, base64, socket
@@ -69,11 +69,11 @@ async def analyze(data: ImageBase64Request):
     # 문제 유형 + 위치 예측
     problem, location = run_pipeline(image, model=model)
 
-    # 해결책 생성
-    solution = return_solution(problem, location)
+    # 해결책 생성 및 매칭된 전체 문제명 확보
+    solution, selected_problem = return_solution(problem, location)
 
     return {
-        "problem": problem,
+        "problem": selected_problem,
         "location": location,
         "solution": solution
     }
@@ -92,6 +92,9 @@ async def chat(data: ChatRequest):
 class RecommendRequest(BaseModel):
     problem: str
     location: str
+    # 선택적으로 프론트에서 supplies를 직접 전달할 수도 있음
+    supplies_required: list[str] | None = None
+    supplies_optional: list[str] | None = None
 
 def _extract_price_from_text(text: str) -> int:
     """텍스트에서 가격 정보를 추출합니다."""
@@ -249,51 +252,74 @@ def _filter_and_rank_products(products: list, limit: int = 2) -> list:
     
     return results
 
-def _keyword_groups(problem: str, location: str) -> list:
-    """문제 유형에 따른 키워드 그룹 생성"""
-    p = problem.lower() if problem else ""
-    
-    if "누수" in p or "물" in p or "새" in p:
-        return [
-            {"group": "방수용품", "required": True, "keywords": ["방수테이프", "실리콘 실란트", "누수차단제"]},
-            {"group": "수리도구", "required": False, "keywords": ["배관렌치", "파이프커터", "배관공구세트"]},
-        ]
-    elif "균열" in p or "갈라짐" in p or "크랙" in p:
-        return [
-            {"group": "보수재료", "required": True, "keywords": ["균열보수제", "벽면퍼티", "크랙보수재"]},
-            {"group": "도구", "required": False, "keywords": ["퍼티나이프", "사포지", "페인트롤러"]},
-        ]
-    elif "곰팡" in p:
-        return [
-            {"group": "곰팡이제거제", "required": True, "keywords": ["곰팡이제거제", "곰팡이방지제", "락스"]},
-            {"group": "청소용품", "required": False, "keywords": ["청소용 스크러버", "고무장갑", "방진마스크"]},
-        ]
-    elif "페인트" in p or "도색" in p or "칠" in p:
-        return [
-            {"group": "페인트", "required": True, "keywords": ["벽면페인트", "수성페인트", "프라이머"]},
-            {"group": "도구", "required": False, "keywords": ["페인트붓", "롤러", "마스킹테이프"]},
-        ]
-    elif "타일" in p:
-        return [
-            {"group": "타일보수", "required": True, "keywords": ["타일접착제", "타일그라우트", "타일보수재"]},
-            {"group": "도구", "required": False, "keywords": ["타일커터", "고무망치", "그라우트제거기"]},
-        ]
-    elif "기름" in p or "때" in p:
-        return [
-            {"group": "세정제", "required": True, "keywords": ["베이킹소다", "기름때제거제", "주방세제"]},
-            {"group": "청소도구", "required": False, "keywords": ["사포", "연마패드", "청소브러시"]},
-        ]
-    elif "녹" in p or "부식" in p:
-        return [
-            {"group": "녹제거제", "required": True, "keywords": ["녹제거제", "방청제", "부식방지제"]},
-            {"group": "연마도구", "required": False, "keywords": ["사포", "스틸울", "연마패드"]},
-        ]
-    else:
-        # 기본 그룹
-        return [
-            {"group": "기본수리용품", "required": True, "keywords": ["만능접착제", "수리테이프", "실리콘"]},
-            {"group": "도구", "required": False, "keywords": ["드라이버세트", "망치", "펜치세트"]},
-        ]
+def _keyword_groups(problem: str, location: str, supplies_required: list[str] | None = None, supplies_optional: list[str] | None = None) -> list:
+    """해당 문제의 준비물(필수/선택)을 기반으로 키워드 그룹 생성. 준비물이 없으면 기존 휴리스틱 대체.
+
+    그룹 형식:
+    - group: "준비물(필수)", required: True, keywords: [...]
+    - group: "준비물(선택)", required: False, keywords: [...]
+    """
+    # 1) 우선순위: 요청에 supplies가 직접 담겨온 경우 사용
+    req_items = supplies_required or []
+    opt_items = supplies_optional or []
+
+    # 2) 비어 있으면 homefix.md에서 파싱 시도
+    if not req_items and not opt_items and problem:
+        req_items, opt_items = get_supplies_for_problem(problem)
+
+    # 3) 여전히 없다면 휴리스틱으로 폴백
+    if not req_items and not opt_items:
+        p = problem.lower() if problem else ""
+        if "누수" in p or "물" in p or "새" in p:
+            return [
+                {"group": "방수용품", "required": True, "keywords": ["방수테이프", "실리콘 실란트", "누수차단제"]},
+                {"group": "수리도구", "required": False, "keywords": ["배관렌치", "파이프커터", "배관공구세트"]},
+            ]
+        elif "균열" in p or "갈라짐" in p or "크랙" in p:
+            return [
+                {"group": "보수재료", "required": True, "keywords": ["균열보수제", "벽면퍼티", "크랙보수재"]},
+                {"group": "도구", "required": False, "keywords": ["퍼티나이프", "사포지", "페인트롤러"]},
+            ]
+        elif "곰팡" in p:
+            return [
+                {"group": "곰팡이제거제", "required": True, "keywords": ["곰팡이제거제", "곰팡이방지제", "락스"]},
+                {"group": "청소용품", "required": False, "keywords": ["청소용 스크러버", "고무장갑", "방진마스크"]},
+            ]
+        elif "페인트" in p or "도색" in p or "칠" in p:
+            return [
+                {"group": "페인트", "required": True, "keywords": ["벽면페인트", "수성페인트", "프라이머"]},
+                {"group": "도구", "required": False, "keywords": ["페인트붓", "롤러", "마스킹테이프"]},
+            ]
+        elif "타일" in p:
+            return [
+                {"group": "타일보수", "required": True, "keywords": ["타일접착제", "타일그라우트", "타일보수재"]},
+                {"group": "도구", "required": False, "keywords": ["타일커터", "고무망치", "그라우트제거기"]},
+            ]
+        elif "기름" in p or "때" in p:
+            return [
+                {"group": "세정제", "required": True, "keywords": ["베이킹소다", "기름때제거제", "주방세제"]},
+                {"group": "청소도구", "required": False, "keywords": ["사포", "연마패드", "청소브러시"]},
+            ]
+        elif "녹" in p or "부식" in p:
+            return [
+                {"group": "녹제거제", "required": True, "keywords": ["녹제거제", "방청제", "부식방지제"]},
+                {"group": "연마도구", "required": False, "keywords": ["사포", "스틸울", "연마패드"]},
+            ]
+        else:
+            return [
+                {"group": "기본수리용품", "required": True, "keywords": ["만능접착제", "수리테이프", "실리콘"]},
+                {"group": "도구", "required": False, "keywords": ["드라이버세트", "망치", "펜치세트"]},
+            ]
+
+    groups: list[dict] = []
+    if req_items:
+        groups.append({"group": "준비물(필수)", "required": True, "keywords": req_items})
+    if opt_items:
+        groups.append({"group": "준비물(선택)", "required": False, "keywords": opt_items})
+    # 둘 다 비어 있으면 기본 그룹을 하나라도 반환하도록 폴백 처리 (이 경우는 위에서 이미 처리되었을 가능성 큼)
+    if not groups:
+        groups.append({"group": "기본", "required": True, "keywords": [problem] if problem else []})
+    return groups
 
 def _fallback_results(groups: list) -> list:
     """API 실패 시 기본 검색 링크 제공"""
@@ -319,7 +345,7 @@ def _fallback_results(groups: list) -> list:
 @app.post("/recommend/")
 async def recommend(req: RecommendRequest):
     """제품 추천 API - Google Custom Search 사용"""
-    groups = _keyword_groups(req.problem, req.location)
+    groups = _keyword_groups(req.problem, req.location, req.supplies_required, req.supplies_optional)
     has_keys = bool(os.environ.get("GOOGLE_SEARCH_API_KEY") and os.environ.get("GOOGLE_SEARCH_ENGINE_ID"))
 
     if not has_keys:
@@ -328,23 +354,32 @@ async def recommend(req: RecommendRequest):
 
     grouped = []
     for g in groups:
+        # 준비물 기반 그룹은 항상 정확한 키워드 검색 링크로 제공 (네이버쇼핑)
+        if g.get("group") in ["준비물(필수)", "준비물(선택)"]:
+            items = _fallback_results([g])[0]["items"]
+            grouped.append({
+                "group": g["group"],
+                "required": g["required"],
+                "items": items
+            })
+            continue
+
         all_products = []
-        
-        # 각 키워드로 제품 검색
+        # 각 키워드로 제품 검색 (Google API)
         for kw in g["keywords"]:
             products = _google_search_products(kw, limit=5)
             all_products.extend(products)
-        
+
         # 제품 필터링 및 순위 매기기
         if all_products:
             best_products = _filter_and_rank_products(all_products, limit=2)
         else:
             # 검색 실패 시 기본 링크 제공
             best_products = _fallback_results([g])[0]["items"]
-        
+
         grouped.append({
-            "group": g["group"], 
-            "required": g["required"], 
+            "group": g["group"],
+            "required": g["required"],
             "items": best_products
         })
 
