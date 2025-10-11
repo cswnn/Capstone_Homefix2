@@ -16,7 +16,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
-  const { isDarkMode, toggleDarkMode, themeColors } = useTheme();
+  const { isDarkMode, toggleDarkMode, themeColors, fontSize, setFontSize, fontSizeMultiplier } = useTheme();
   const [showSettings, setShowSettings] = useState(false);
 
   const handleImageAnalysis = () => {
@@ -87,10 +87,10 @@ export default function HomeScreen() {
             { backgroundColor: themeColors.headerBackground },
           ]}
         >
-          <Text style={[styles.title, { color: themeColors.text }]}>
+          <Text style={[styles.title, { color: themeColors.text, fontSize: 36 * fontSizeMultiplier }]}>
             홈픽스
           </Text>
-          <Text style={[styles.subtitle, { color: themeColors.text }]}>
+          <Text style={[styles.subtitle, { color: themeColors.text, fontSize: 16 * fontSizeMultiplier }]}>
             집안 문제 해결 전문가
           </Text>
         </View>
@@ -113,13 +113,13 @@ export default function HomeScreen() {
                     style={[styles.buttonIcon, { tintColor: themeColors.text }]}
                   />
                 </View>
-                <Text style={[styles.buttonTitle, { color: themeColors.text }]}>
+                <Text style={[styles.buttonTitle, { color: themeColors.text, fontSize: 20 * fontSizeMultiplier }]}>
                   사진으로 물어보기
                 </Text>
                 <Text
                   style={[
                     styles.buttonDescription,
-                    { color: themeColors.text },
+                    { color: themeColors.text, fontSize: 14 * fontSizeMultiplier },
                   ]}
                 >
                   문제가 있는 곳을 사진으로 찍어서{"\n"}정확한 해결책을
@@ -143,13 +143,13 @@ export default function HomeScreen() {
                     style={[styles.buttonIcon, { tintColor: themeColors.text }]}
                   />
                 </View>
-                <Text style={[styles.buttonTitle, { color: themeColors.text }]}>
+                <Text style={[styles.buttonTitle, { color: themeColors.text, fontSize: 20 * fontSizeMultiplier }]}>
                   채팅으로 물어보기
                 </Text>
                 <Text
                   style={[
                     styles.buttonDescription,
-                    { color: themeColors.text },
+                    { color: themeColors.text, fontSize: 14 * fontSizeMultiplier },
                   ]}
                 >
                   궁금한 집안 문제를{"\n"}직접 질문해보세요
@@ -160,7 +160,7 @@ export default function HomeScreen() {
 
           {/* 하단 안내 */}
           <View style={styles.footer}>
-            <Text style={[styles.footerText, { color: themeColors.text }]}>
+            <Text style={[styles.footerText, { color: themeColors.text, fontSize: 14 * fontSizeMultiplier }]}>
               💡 더 정확한 답변을 위해 구체적으로 질문해주세요
             </Text>
           </View>
@@ -240,7 +240,7 @@ export default function HomeScreen() {
                   </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity
+                <View
                   style={[
                     styles.settingsItem,
                     { borderBottomColor: themeColors.borderColor },
@@ -257,7 +257,39 @@ export default function HomeScreen() {
                   >
                     글자크기
                   </Text>
-                </TouchableOpacity>
+                  <View style={styles.fontSizeToggle}>
+                    <TouchableOpacity
+                      style={[
+                        styles.fontSizeButton,
+                        { backgroundColor: themeColors.buttonBackground },
+                        fontSize === 'small' && styles.fontSizeButtonActive,
+                      ]}
+                      onPress={() => setFontSize('small')}
+                    >
+                      <Text style={[styles.fontSizeText, { color: themeColors.text }]}>작게</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.fontSizeButton,
+                        { backgroundColor: themeColors.buttonBackground },
+                        fontSize === 'medium' && styles.fontSizeButtonActive,
+                      ]}
+                      onPress={() => setFontSize('medium')}
+                    >
+                      <Text style={[styles.fontSizeText, { color: themeColors.text }]}>보통</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.fontSizeButton,
+                        { backgroundColor: themeColors.buttonBackground },
+                        fontSize === 'large' && styles.fontSizeButtonActive,
+                      ]}
+                      onPress={() => setFontSize('large')}
+                    >
+                      <Text style={[styles.fontSizeText, { color: themeColors.text }]}>크게</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
 
                 <TouchableOpacity
                   style={[
@@ -538,5 +570,24 @@ const styles = StyleSheet.create({
   },
   toggleThumbActive: {
     transform: [{ translateX: 20 }],
+  },
+  // 글자크기 토글 스타일
+  fontSizeToggle: {
+    flexDirection: "row",
+    gap: 4,
+  },
+  fontSizeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  fontSizeButtonActive: {
+    backgroundColor: "#007AFF",
+  },
+  fontSizeText: {
+    fontSize: 12,
+    fontWeight: "500",
   },
 });

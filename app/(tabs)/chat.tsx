@@ -45,7 +45,7 @@ interface Message {
 }
 
 export default function ChatScreen() {
-  const { themeColors } = useTheme();
+  const { themeColors, fontSize, setFontSize, fontSizeMultiplier } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -224,7 +224,7 @@ export default function ChatScreen() {
                         style={[
                           styles.messageText,
                           message.isUser ? styles.userText : styles.botText,
-                          { color: themeColors.text },
+                          { color: themeColors.text, fontSize: 16 * fontSizeMultiplier },
                         ]}
                         onComplete={() => {
                           setMessages((prev) =>
@@ -241,7 +241,7 @@ export default function ChatScreen() {
                         style={[
                           styles.messageText,
                           message.isUser ? styles.userText : styles.botText,
-                          { color: themeColors.text },
+                          { color: themeColors.text, fontSize: 16 * fontSizeMultiplier },
                         ]}
                       >
                         {message.text}
@@ -251,17 +251,17 @@ export default function ChatScreen() {
                   {/* 제품 추천 렌더링 */}
                   {!message.isUser && message.recoGroups && message.recoGroups.length > 0 && (
                     <View style={styles.recoContainer}>
-                      <Text style={[styles.recoTitle, { color: themeColors.text }]}>제품추천</Text>
+                      <Text style={[styles.recoTitle, { color: themeColors.text, fontSize: 16 * fontSizeMultiplier }]}>제품추천</Text>
                       {message.recoGroups.map((g, idx) => (
                         <View key={`${message.id}-g-${idx}`} style={styles.recoGroup}>
-                          <Text style={[styles.recoCategory, { color: themeColors.text }]}>
+                          <Text style={[styles.recoCategory, { color: themeColors.text, fontSize: 14 * fontSizeMultiplier }]}>
                             {g.required ? "필수" : "선택"}
                           </Text>
                           {g.items.map((it, jdx) => (
-                            <Text key={`${message.id}-g-${idx}-i-${jdx}`} style={[styles.recoItem, { color: themeColors.text }]}>
+                            <Text key={`${message.id}-g-${idx}-i-${jdx}`} style={[styles.recoItem, { color: themeColors.text, fontSize: 14 * fontSizeMultiplier }]}>
                               {jdx + 1}. {it.title} -{" "}
                               <Text 
-                                style={[styles.recoLink, { color: "#3498db" }]} 
+                                style={[styles.recoLink, { color: "#3498db", fontSize: 14 * fontSizeMultiplier }]} 
                                 onPress={() => openBrowserAsync(it.link)}
                               >
                                 링크
@@ -292,7 +292,7 @@ export default function ChatScreen() {
                     style={[
                       styles.messageText,
                       styles.botText,
-                      { color: themeColors.text },
+                      { color: themeColors.text, fontSize: 16 * fontSizeMultiplier },
                     ]}
                   >
                     입력 중...
@@ -309,6 +309,7 @@ export default function ChatScreen() {
                 {
                   backgroundColor: themeColors.inputBackground,
                   color: themeColors.text,
+                  fontSize: 16 * fontSizeMultiplier,
                 },
               ]}
               value={inputText}
@@ -372,6 +373,57 @@ export default function ChatScreen() {
               </View>
 
               <View style={styles.settingsContent}>
+                <View
+                  style={[
+                    styles.settingsItem,
+                    { borderBottomColor: themeColors.borderColor },
+                  ]}
+                >
+                  <View style={styles.settingsIcon}>
+                    <View style={styles.fontIcon}>
+                      <Text style={[styles.fontText, { color: themeColors.text }]}>A</Text>
+                      <Text style={[styles.fontTextSmall, { color: themeColors.text }]}>A</Text>
+                    </View>
+                  </View>
+                  <Text
+                    style={[styles.settingsText, { color: themeColors.text }]}
+                  >
+                    글자크기
+                  </Text>
+                  <View style={styles.fontSizeToggle}>
+                    <TouchableOpacity
+                      style={[
+                        styles.fontSizeButton,
+                        { backgroundColor: themeColors.buttonBackground },
+                        fontSize === 'small' && styles.fontSizeButtonActive,
+                      ]}
+                      onPress={() => setFontSize('small')}
+                    >
+                      <Text style={[styles.fontSizeText, { color: themeColors.text }]}>작게</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.fontSizeButton,
+                        { backgroundColor: themeColors.buttonBackground },
+                        fontSize === 'medium' && styles.fontSizeButtonActive,
+                      ]}
+                      onPress={() => setFontSize('medium')}
+                    >
+                      <Text style={[styles.fontSizeText, { color: themeColors.text }]}>보통</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.fontSizeButton,
+                        { backgroundColor: themeColors.buttonBackground },
+                        fontSize === 'large' && styles.fontSizeButtonActive,
+                      ]}
+                      onPress={() => setFontSize('large')}
+                    >
+                      <Text style={[styles.fontSizeText, { color: themeColors.text }]}>크게</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
                 <TouchableOpacity
                   style={[
                     styles.settingsItem,
@@ -639,5 +691,38 @@ const styles = StyleSheet.create({
   },
   recoLink: {
     textDecorationLine: "underline",
+  },
+  // 글자크기 토글 스타일
+  fontSizeToggle: {
+    flexDirection: "row",
+    gap: 4,
+  },
+  fontSizeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  fontSizeButtonActive: {
+    backgroundColor: "#007AFF",
+  },
+  fontSizeText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  // 아이콘 스타일
+  fontIcon: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  fontText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginRight: 2,
+  },
+  fontTextSmall: {
+    fontSize: 12,
+    fontWeight: "bold",
   },
 });

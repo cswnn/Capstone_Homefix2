@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 interface ThemeContextType {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  fontSize: 'small' | 'medium' | 'large';
+  setFontSize: (size: 'small' | 'medium' | 'large') => void;
   themeColors: {
     background: string;
     text: string;
@@ -13,6 +15,7 @@ interface ThemeContextType {
     borderColor: string;
     inputBackground: string;
   };
+  fontSizeMultiplier: number;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -29,6 +32,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [fontSize, setFontSizeState] = useState<'small' | 'medium' | 'large'>('medium');
+
+  // 폰트 크기 배수 정의
+  const fontSizeMultiplier = fontSize === 'small' ? 0.9 : fontSize === 'medium' ? 1.0 : 1.1;
 
   // 테마 색상 정의
   const themeColors = {
@@ -48,6 +55,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     AsyncStorage.setItem("isDarkMode", JSON.stringify(newMode));
   };
 
+  // 폰트 크기 설정 함수
+  const setFontSize = (size: 'small' | 'medium' | 'large') => {
+    setFontSizeState(size);
+    AsyncStorage.setItem("fontSize", size);
+  };
+
   // 앱 시작 시 저장된 테마 설정 불러오기
   useEffect(() => {
     const loadTheme = async () => {
@@ -55,6 +68,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         const savedTheme = await AsyncStorage.getItem("isDarkMode");
         if (savedTheme !== null) {
           setIsDarkMode(JSON.parse(savedTheme));
+        }
+
+        const savedFontSize = await AsyncStorage.getItem("fontSize");
+        if (savedFontSize !== null && ['small', 'medium', 'large'].includes(savedFontSize)) {
+          setFontSizeState(savedFontSize as 'small' | 'medium' | 'large');
         }
       } catch (error) {
         console.error("Failed to load theme:", error);
@@ -64,7 +82,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode, themeColors }}>
+    <ThemeContext.Provider 
+      value={{ 
+        isDarkMode, 
+        toggleDarkMode, 
+        fontSize, 
+        setFontSize, 
+        themeColors, 
+        fontSizeMultiplier 
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
