@@ -174,29 +174,61 @@ export default function HomeScreen() {
           onRequestClose={() => setShowSettings(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.settingsPanel}>
-              <View style={styles.settingsHeader}>
-                <Text style={styles.settingsTitle}>HomeFix</Text>
+            <View
+              style={[
+                styles.settingsPanel,
+                { backgroundColor: themeColors.background },
+              ]}
+            >
+              <View
+                style={[
+                  styles.settingsHeader,
+                  { borderBottomColor: themeColors.borderColor },
+                ]}
+              >
+                <Text
+                  style={[styles.settingsTitle, { color: themeColors.text }]}
+                >
+                  HomeFix
+                </Text>
                 <TouchableOpacity
-                  style={styles.closeButton}
+                  style={[
+                    styles.closeButton,
+                    { backgroundColor: themeColors.buttonBackground },
+                  ]}
                   onPress={() => setShowSettings(false)}
                 >
-                  <Text style={styles.closeButtonText}>✕</Text>
+                  <Text
+                    style={[styles.closeButtonText, { color: themeColors.text }]}
+                  >
+                    ✕
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.settingsContent}>
                 <TouchableOpacity
-                  style={styles.settingsItem}
+                  style={[
+                    styles.settingsItem,
+                    { borderBottomColor: themeColors.borderColor },
+                  ]}
                   onPress={toggleDarkMode}
                 >
                   <View style={styles.settingsIcon}>
-                    <View style={styles.sunIcon} />
+                    <View style={[styles.sunIcon, { borderColor: themeColors.text }]} />
                   </View>
-                  <Text style={styles.settingsText}>다크모드</Text>
+                  <Text
+                    style={[styles.settingsText, { color: themeColors.text }]}
+                  >
+                    다크모드
+                  </Text>
                   <View style={styles.toggleContainer}>
                     <View
-                      style={[styles.toggle, isDarkMode && styles.toggleActive]}
+                      style={[
+                        styles.toggle,
+                        { backgroundColor: themeColors.buttonBackground },
+                        isDarkMode && styles.toggleActive,
+                      ]}
                     >
                       <View
                         style={[
@@ -208,24 +240,46 @@ export default function HomeScreen() {
                   </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.settingsItem}>
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    { borderBottomColor: themeColors.borderColor },
+                  ]}
+                >
                   <View style={styles.settingsIcon}>
                     <View style={styles.fontIcon}>
-                      <Text style={styles.fontText}>A</Text>
-                      <Text style={styles.fontTextSmall}>A</Text>
+                      <Text style={[styles.fontText, { color: themeColors.text }]}>A</Text>
+                      <Text style={[styles.fontTextSmall, { color: themeColors.text }]}>A</Text>
                     </View>
                   </View>
-                  <Text style={styles.settingsText}>글자크기</Text>
+                  <Text
+                    style={[styles.settingsText, { color: themeColors.text }]}
+                  >
+                    글자크기
+                  </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.settingsItem}>
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    { borderBottomColor: themeColors.borderColor },
+                  ]}
+                >
                   <View style={styles.settingsIcon}>
                     <View style={styles.inquiryIcon}>
-                      <View style={styles.personIcon} />
-                      <View style={styles.wrenchIcon} />
+                      <View
+                        style={[styles.personIcon, { backgroundColor: themeColors.text }]}
+                      />
+                      <View
+                        style={[styles.wrenchIcon, { backgroundColor: themeColors.text }]}
+                      />
                     </View>
                   </View>
-                  <Text style={styles.settingsText}>문의하기</Text>
+                  <Text
+                    style={[styles.settingsText, { color: themeColors.text }]}
+                  >
+                    문의하기
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -372,7 +426,6 @@ const styles = StyleSheet.create({
   settingsPanel: {
     width: "70%",
     height: "100%",
-    backgroundColor: "white",
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
   },
@@ -382,24 +435,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
   },
   settingsTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#333",
   },
   closeButton: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#f0f0f0",
     justifyContent: "center",
     alignItems: "center",
   },
   closeButtonText: {
     fontSize: 16,
-    color: "#666",
   },
   settingsContent: {
     padding: 20,
@@ -410,7 +459,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   settingsIcon: {
     width: 40,
@@ -421,7 +469,6 @@ const styles = StyleSheet.create({
   },
   settingsText: {
     fontSize: 16,
-    color: "#333",
   },
   // 아이콘 스타일
   sunIcon: {
@@ -430,7 +477,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#FFD700",
     borderWidth: 2,
-    borderColor: "#FFA500",
   },
   fontIcon: {
     flexDirection: "row",
@@ -439,13 +485,11 @@ const styles = StyleSheet.create({
   fontText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
     marginRight: 2,
   },
   fontTextSmall: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#666",
   },
   inquiryIcon: {
     width: 24,
@@ -457,13 +501,11 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: "#333",
     marginBottom: 2,
   },
   wrenchIcon: {
     width: 12,
     height: 2,
-    backgroundColor: "#333",
     borderRadius: 1,
   },
   // 토글 버튼 스타일
@@ -474,7 +516,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#e0e0e0",
     justifyContent: "center",
     paddingHorizontal: 2,
   },

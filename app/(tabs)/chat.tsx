@@ -357,16 +357,26 @@ export default function ChatScreen() {
                   HomeFix
                 </Text>
                 <TouchableOpacity
-                  style={styles.closeButton}
+                  style={[
+                    styles.closeButton,
+                    { backgroundColor: themeColors.buttonBackground },
+                  ]}
                   onPress={() => setShowSettings(false)}
                 >
-                  <Text style={styles.closeButtonText}>✕</Text>
+                  <Text
+                    style={[styles.closeButtonText, { color: themeColors.text }]}
+                  >
+                    ✕
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.settingsContent}>
                 <TouchableOpacity
-                  style={styles.settingsItem}
+                  style={[
+                    styles.settingsItem,
+                    { borderBottomColor: themeColors.borderColor },
+                  ]}
                   onPress={() => {
                     setShowSettings(false);
                     goToHome();
@@ -485,13 +495,11 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#f0f0f0",
     justifyContent: "center",
     alignItems: "center",
   },
   closeButtonText: {
     fontSize: 16,
-    color: "#666",
   },
   settingsContent: {
     padding: 20,
@@ -502,7 +510,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
   },
   settingsIcon: {
     width: 40,
