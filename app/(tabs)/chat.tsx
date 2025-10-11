@@ -15,7 +15,9 @@ import {
   TouchableOpacity,
   View,
   Linking,
+  Image,
 } from "react-native";
+import { openBrowserAsync } from "expo-web-browser";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 interface RecoItem {
@@ -246,40 +248,28 @@ export default function ChatScreen() {
                       </Text>
                     ))}
 
-                  {/* 준비물/제품 추천 카드 렌더링 */}
+                  {/* 제품 추천 렌더링 */}
                   {!message.isUser && message.recoGroups && message.recoGroups.length > 0 && (
-                    <View style={[styles.recoCard, { borderColor: themeColors.borderColor }]}> 
-                      <Text style={[styles.recoTitle, { color: themeColors.text }]}>준비물 추천</Text>
-                      <View style={styles.recoGroupsContainer}>
-                        {message.recoGroups.map((g, idx) => (
-                          <View key={`${message.id}-g-${idx}`} style={styles.recoGroupRow}>
-                            <View style={styles.recoGroupHeader}>
-                              <Text style={[styles.recoGroupName, { color: themeColors.text }]}>{g.group}</Text>
-                              <Text style={[styles.recoRequired, { color: themeColors.text }]}>{g.required ? "필수" : "선택"}</Text>
-                            </View>
-                            <View style={styles.recoItems}>
-                              {g.items.map((it, jdx) => (
-                                <TouchableOpacity
-                                  key={`${message.id}-g-${idx}-i-${jdx}`}
-                                  style={[styles.recoItem, { borderColor: themeColors.borderColor }]}
-                                  onPress={() => Linking.openURL(it.link)}
-                                  activeOpacity={0.7}
-                                >
-                                  <Text style={[styles.recoItemTitle, { color: themeColors.text }]} numberOfLines={1}>{it.title}</Text>
-                                  <View style={styles.recoMetaRow}>
-                                    {typeof it.price === "number" && (
-                                      <Text style={[styles.recoMeta, { color: themeColors.text }]}>{it.price.toLocaleString()}원</Text>
-                                    )}
-                                    {typeof it.rating === "number" && (
-                                      <Text style={[styles.recoMeta, { color: themeColors.text }]}>★ {it.rating.toFixed(1)}</Text>
-                                    )}
-                                  </View>
-                                </TouchableOpacity>
-                              ))}
-                            </View>
-                          </View>
-                        ))}
-                      </View>
+                    <View style={styles.recoContainer}>
+                      <Text style={[styles.recoTitle, { color: themeColors.text }]}>제품추천</Text>
+                      {message.recoGroups.map((g, idx) => (
+                        <View key={`${message.id}-g-${idx}`} style={styles.recoGroup}>
+                          <Text style={[styles.recoCategory, { color: themeColors.text }]}>
+                            {g.required ? "필수" : "선택"}
+                          </Text>
+                          {g.items.map((it, jdx) => (
+                            <Text key={`${message.id}-g-${idx}-i-${jdx}`} style={[styles.recoItem, { color: themeColors.text }]}>
+                              {jdx + 1}. {it.title} -{" "}
+                              <Text 
+                                style={[styles.recoLink, { color: "#3498db" }]} 
+                                onPress={() => openBrowserAsync(it.link)}
+                              >
+                                링크
+                              </Text>
+                            </Text>
+                          ))}
+                        </View>
+                      ))}
                     </View>
                   )}
                 </View>
@@ -616,5 +606,31 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "600",
+  },
+  // 제품 추천 스타일
+  recoContainer: {
+    marginTop: 8,
+  },
+  recoTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  recoGroup: {
+    marginBottom: 6,
+  },
+  recoCategory: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  recoItem: {
+    fontSize: 14,
+    marginLeft: 8,
+    marginBottom: 2,
+    lineHeight: 18,
+  },
+  recoLink: {
+    textDecorationLine: "underline",
   },
 });
