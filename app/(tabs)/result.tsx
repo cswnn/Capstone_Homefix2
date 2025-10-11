@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { getApiClient } from "@/config/api";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { openBrowserAsync } from "expo-web-browser";
 
 export default function ResultScreen() {
   const { themeColors } = useTheme();
@@ -194,9 +195,8 @@ export default function ResultScreen() {
                               )}
                             </View>
                             <Text style={[styles.recoLink, { color: themeColors.text }]} onPress={() => {
-                              // 웹 브라우저 열기
-                              // Linking을 동적 import하여 웹/네이티브 양쪽 지원
-                              import("react-native").then(({ Linking }) => Linking.openURL(it.link));
+                              // 앱 내 브라우저로 열어서 네비게이션 스택 유지
+                              openBrowserAsync(it.link);
                             }}>🔗 상품 보기</Text>
                           </View>
                         </View>
