@@ -5,23 +5,23 @@ import React from "react";
 export const renderFormattedText = (
   text: string,
   textStyle: any
-): React.ReactNode[] => {
+): React.ReactNode => {
   const parts = text.split(/(\*\*.*?\*\*)/g);
 
-  return parts.map((part, index) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      // **텍스트** 형태의 부분을 굵게 표시
-      const boldText = part.slice(2, -2); // ** 제거
-      return (
-        <Text key={index} style={[textStyle, { fontWeight: "bold" }]}>
-          {boldText}
-        </Text>
-      );
-    }
-    return (
-      <Text key={index} style={textStyle}>
-        {part}
-      </Text>
-    );
-  });
+  return (
+    <Text style={textStyle}>
+      {parts.map((part, index) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          // **텍스트** 형태의 부분을 굵게 표시
+          const boldText = part.slice(2, -2); // ** 제거
+          return (
+            <Text key={index} style={{ fontWeight: "bold" }}>
+              {boldText}
+            </Text>
+          );
+        }
+        return part;
+      })}
+    </Text>
+  );
 };

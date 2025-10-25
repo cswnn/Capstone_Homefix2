@@ -45,6 +45,8 @@ interface Message {
   timestamp: Date;
   isTyping?: boolean; // 타이핑 효과 여부
   recoGroups?: RecoGroup[]; // 제품/준비물 추천 결과
+  recoTyping?: boolean; // 제품 추천 타이핑 효과 여부
+  recoItemsTyping?: boolean; // 제품 목록 타이핑 효과 여부
 }
 
 const { width } = Dimensions.get("window");
@@ -127,40 +129,33 @@ export default function ChatScreen() {
         message: inputText.trim(),
       });
 
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.data.response,
-        isUser: false,
-        timestamp: new Date(),
-        isTyping: true, // 타이핑 효과
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-
       // 구체적인 질문일 때만 준비물/제품 추천 요청
+      let recoGroups: RecoGroup[] = [];
       if (response.data.is_specific) {
         try {
           const recoRes = await apiClient.post("/recommend/", {
             problem: inputText.trim(),
             location: "",
           });
-          const groups: RecoGroup[] = recoRes?.data?.groups || [];
-          if (groups.length > 0) {
-            const recoMessage: Message = {
-              id: (Date.now() + 2).toString(),
-              text: "아래 추천 준비물을 참고해 보세요.",
-              isUser: false,
-              timestamp: new Date(),
-              isTyping: true,
-              recoGroups: groups,
-            };
-            setMessages((prev) => [...prev, recoMessage]);
-          }
+          recoGroups = recoRes?.data?.groups || [];
         } catch (e) {
           // 추천 실패는 무시하고 채팅만 표시
           console.warn("추천 요청 실패", e);
         }
       }
+
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: response.data.response,
+        isUser: false,
+        timestamp: new Date(),
+        isTyping: true, // 타이핑 효과
+        recoGroups: recoGroups.length > 0 ? recoGroups : undefined, // 제품 추천 정보
+        recoTyping: recoGroups.length > 0, // 제품 추천도 타이핑 효과 적용
+        recoItemsTyping: recoGroups.length > 0, // 제품 목록도 타이핑 효과 적용
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
     } catch (error: any) {
       console.error("채팅 에러:", error?.message || error);
       Alert.alert("오류", "메시지를 전송할 수 없습니다.");
@@ -276,74 +271,131 @@ export default function ChatScreen() {
                         }}
                       />
                     ) : (
-                      <View>
+                      <Text
+                        style={[
+                          styles.messageText,
+                          message.isUser ? styles.userText : styles.botText,
+                          {
+                            color: themeColors.text,
+                            fontSize: 16 * fontSizeMultiplier,
+                          },
+                        ]}
+                      >
                         {renderFormattedText(message.text, {
                           color: themeColors.text,
                           fontSize: 16 * fontSizeMultiplier,
                         })}
-                      </View>
+                      </Text>
                     ))}
 
-                  {/* 제품 추천 렌더링 */}
+                  {/* 제품 추천 렌더링 - 해결책 타이핑 완료 후에만 표시 */}
                   {!message.isUser &&
                     message.recoGroups &&
-                    message.recoGroups.length > 0 && (
+                    message.recoGroups.length > 0 &&
+                    !message.isTyping && (
                       <View style={styles.recoContainer}>
-                        <Text
-                          style={[
-                            styles.recoTitle,
-                            {
-                              color: themeColors.text,
-                              fontSize: 16 * fontSizeMultiplier,
-                            },
-                          ]}
-                        >
-                          제품추천
-                        </Text>
-                        {message.recoGroups.map((g, idx) => (
-                          <View
-                            key={`${message.id}-g-${idx}`}
-                            style={styles.recoGroup}
+                        {message.recoTyping ? (
+                          <TypingText
+                            text="💡 추천 준비물"
+                            speed={50}
+                            style={[
+                              styles.recoTitle,
+                              {
+                                color: themeColors.text,
+                                fontSize: 16 * fontSizeMultiplier,
+                              },
+                            ]}
+                            onComplete={() => {
+                              // 제품 추천 타이핑 완료 후 recoTyping을 false로 설정하고 제품 목록 타이핑 시작
+                              setMessages((prev) =>
+                                prev.map((msg) =>
+                                  msg.id === message.id
+                                    ? { ...msg, recoTyping: false }
+                                    : msg
+                                )
+                              );
+                            }}
+                          />
+                        ) : (
+                          <Text
+                            style={[
+                              styles.recoTitle,
+                              {
+                                color: themeColors.text,
+                                fontSize: 16 * fontSizeMultiplier,
+                              },
+                            ]}
                           >
-                            <Text
-                              style={[
-                                styles.recoCategory,
-                                {
-                                  color: themeColors.text,
-                                  fontSize: 14 * fontSizeMultiplier,
-                                },
-                              ]}
+                            💡 추천 준비물
+                          </Text>
+                        )}
+                        {!message.recoTyping && message.recoItemsTyping && (
+                          <TypingText
+                            text="준비물을 찾고 있습니다..."
+                            speed={30}
+                            style={{
+                              color: themeColors.text,
+                              fontSize: 14 * fontSizeMultiplier,
+                              fontStyle: "italic",
+                            }}
+                            onComplete={() => {
+                              // 제품 목록 타이핑 완료 후 recoItemsTyping을 false로 설정
+                              setMessages((prev) =>
+                                prev.map((msg) =>
+                                  msg.id === message.id
+                                    ? { ...msg, recoItemsTyping: false }
+                                    : msg
+                                )
+                              );
+                            }}
+                          />
+                        )}
+                        {!message.recoTyping &&
+                          !message.recoItemsTyping &&
+                          message.recoGroups.map((g, idx) => (
+                            <View
+                              key={`${message.id}-g-${idx}`}
+                              style={styles.recoGroup}
                             >
-                              {g.required ? "필수" : "선택"}
-                            </Text>
-                            {g.items.map((it, jdx) => (
                               <Text
-                                key={`${message.id}-g-${idx}-i-${jdx}`}
                                 style={[
-                                  styles.recoItem,
+                                  styles.recoCategory,
                                   {
                                     color: themeColors.text,
                                     fontSize: 14 * fontSizeMultiplier,
                                   },
                                 ]}
                               >
-                                {jdx + 1}. {it.title} -{" "}
+                                {g.required ? "필수" : "선택"}
+                              </Text>
+                              {g.items.map((it, jdx) => (
                                 <Text
+                                  key={`${message.id}-g-${idx}-i-${jdx}`}
                                   style={[
-                                    styles.recoLink,
+                                    styles.recoItem,
                                     {
-                                      color: "#3498db",
+                                      color: themeColors.text,
                                       fontSize: 14 * fontSizeMultiplier,
                                     },
                                   ]}
-                                  onPress={() => openBrowserAsync(it.link)}
                                 >
-                                  링크
+                                  {jdx + 1}. {it.title} -{" "}
+                                  <Text
+                                    style={[
+                                      styles.recoLink,
+                                      {
+                                        color: "#3498db",
+                                        fontSize: 14 * fontSizeMultiplier,
+                                      },
+                                    ]}
+                                    onPress={() => openBrowserAsync(it.link)}
+                                  >
+                                    링크
+                                  </Text>
                                 </Text>
-                              </Text>
-                            ))}
-                          </View>
-                        ))}
+                              ))}
+                            </View>
+                          ))}
                       </View>
                     )}
                 </View>

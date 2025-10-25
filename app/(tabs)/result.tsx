@@ -208,12 +208,17 @@ export default function ResultScreen() {
             >
               해결책
             </Text>
-            <View>
+            <Text
+              style={[
+                styles.solutionText,
+                { color: themeColors.text, fontSize: 16 * fontSizeMultiplier },
+              ]}
+            >
               {renderFormattedText(solution, {
                 color: themeColors.text,
                 fontSize: 16 * fontSizeMultiplier,
               })}
-            </View>
+            </Text>
           </View>
 
           {/* 제품 추천 카드 */}
