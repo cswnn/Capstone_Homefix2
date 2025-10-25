@@ -21,28 +21,7 @@ import {
 } from "react-native";
 import { openBrowserAsync } from "expo-web-browser";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-
-// **텍스트** 형태의 강조 표시를 굵게 표시하는 함수
-const renderFormattedText = (text: string, textStyle: any) => {
-  const parts = text.split(/(\*\*.*?\*\*)/g);
-
-  return parts.map((part, index) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      // **텍스트** 형태의 부분을 굵게 표시
-      const boldText = part.slice(2, -2); // ** 제거
-      return (
-        <Text key={index} style={[textStyle, { fontWeight: "bold" }]}>
-          {boldText}
-        </Text>
-      );
-    }
-    return (
-      <Text key={index} style={textStyle}>
-        {part}
-      </Text>
-    );
-  });
-};
+import { renderFormattedText } from "@/utils/textFormatting";
 
 interface RecoItem {
   title: string;
@@ -158,27 +137,29 @@ export default function ChatScreen() {
 
       setMessages((prev) => [...prev, botMessage]);
 
-      // 준비물/제품 추천도 함께 요청 (사용자 질문 기반)
-      try {
-        const recoRes = await apiClient.post("/recommend/", {
-          problem: inputText.trim(),
-          location: "",
-        });
-        const groups: RecoGroup[] = recoRes?.data?.groups || [];
-        if (groups.length > 0) {
-          const recoMessage: Message = {
-            id: (Date.now() + 2).toString(),
-            text: "아래 추천 준비물을 참고해 보세요.",
-            isUser: false,
-            timestamp: new Date(),
-            isTyping: true,
-            recoGroups: groups,
-          };
-          setMessages((prev) => [...prev, recoMessage]);
+      // 구체적인 질문일 때만 준비물/제품 추천 요청
+      if (response.data.is_specific) {
+        try {
+          const recoRes = await apiClient.post("/recommend/", {
+            problem: inputText.trim(),
+            location: "",
+          });
+          const groups: RecoGroup[] = recoRes?.data?.groups || [];
+          if (groups.length > 0) {
+            const recoMessage: Message = {
+              id: (Date.now() + 2).toString(),
+              text: "아래 추천 준비물을 참고해 보세요.",
+              isUser: false,
+              timestamp: new Date(),
+              isTyping: true,
+              recoGroups: groups,
+            };
+            setMessages((prev) => [...prev, recoMessage]);
+          }
+        } catch (e) {
+          // 추천 실패는 무시하고 채팅만 표시
+          console.warn("추천 요청 실패", e);
         }
-      } catch (e) {
-        // 추천 실패는 무시하고 채팅만 표시
-        console.warn("추천 요청 실패", e);
       }
     } catch (error: any) {
       console.error("채팅 에러:", error?.message || error);
@@ -295,21 +276,12 @@ export default function ChatScreen() {
                         }}
                       />
                     ) : (
-                      <Text
-                        style={[
-                          styles.messageText,
-                          message.isUser ? styles.userText : styles.botText,
-                          {
-                            color: themeColors.text,
-                            fontSize: 16 * fontSizeMultiplier,
-                          },
-                        ]}
-                      >
+                      <View>
                         {renderFormattedText(message.text, {
                           color: themeColors.text,
                           fontSize: 16 * fontSizeMultiplier,
                         })}
-                      </Text>
+                      </View>
                     ))}
 
                   {/* 제품 추천 렌더링 */}

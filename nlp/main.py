@@ -78,14 +78,17 @@ def chat_with_ai(user_message: str):
     사용자 메시지에 대한 스마트한 채팅 응답을 생성합니다.
     구체적이지 않은 질문의 경우 추가 질문을 통해 더 정확한 답변을 제공합니다.
     문맥이 필요한 질문의 경우 이전 대화를 고려한 답변을 생성합니다.
+    
+    Returns:
+        dict: {"response": 답변, "is_specific": 구체성 여부}
     """
     
     # 대화 처리
     response_message, is_final_answer, requires_context = process_user_message(user_message)
     
     if not is_final_answer:
-        # 추가 질문이 필요한 경우
-        return response_message
+        # 추가 질문이 필요한 경우 (애매한 질문)
+        return {"response": response_message, "is_specific": False}
     
     if requires_context:
         # 문맥이 필요한 질문인 경우
@@ -104,7 +107,7 @@ def chat_with_ai(user_message: str):
         # 대화 기록에 최종 답변 추가
         conversation_manager.add_to_history(response_message, answer)
         
-        return answer
+        return {"response": answer, "is_specific": True}
     
     # 일반적인 최종 답변을 생성하는 경우
     search_query = response_message
@@ -136,4 +139,4 @@ def chat_with_ai(user_message: str):
     from .conversation import conversation_manager
     conversation_manager.add_to_history(response_message, answer)
     
-    return answer
+    return {"response": answer, "is_specific": True}

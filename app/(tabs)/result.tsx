@@ -15,28 +15,7 @@ import {
 import { getApiClient } from "@/config/api";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { openBrowserAsync } from "expo-web-browser";
-
-// **텍스트** 형태의 강조 표시를 굵게 표시하는 함수
-const renderFormattedText = (text: string, textStyle: any) => {
-  const parts = text.split(/(\*\*.*?\*\*)/g);
-
-  return parts.map((part, index) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      // **텍스트** 형태의 부분을 굵게 표시
-      const boldText = part.slice(2, -2); // ** 제거
-      return (
-        <Text key={index} style={[textStyle, { fontWeight: "bold" }]}>
-          {boldText}
-        </Text>
-      );
-    }
-    return (
-      <Text key={index} style={textStyle}>
-        {part}
-      </Text>
-    );
-  });
-};
+import { renderFormattedText } from "@/utils/textFormatting";
 
 const { width } = Dimensions.get("window");
 const panelWidth = width * 0.7;
@@ -229,17 +208,12 @@ export default function ResultScreen() {
             >
               해결책
             </Text>
-            <Text
-              style={[
-                styles.solutionText,
-                { color: themeColors.text, fontSize: 16 * fontSizeMultiplier },
-              ]}
-            >
+            <View>
               {renderFormattedText(solution, {
                 color: themeColors.text,
                 fontSize: 16 * fontSizeMultiplier,
               })}
-            </Text>
+            </View>
           </View>
 
           {/* 제품 추천 카드 */}

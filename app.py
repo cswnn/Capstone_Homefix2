@@ -82,9 +82,9 @@ async def analyze(data: ImageBase64Request):
 @app.post("/chat/")
 async def chat(data: ChatRequest):
     try:
-        # AI와 채팅
-        response = chat_with_ai(data.message)
-        return {"response": response}
+        # AI와 채팅 (구체성 정보 포함)
+        result = chat_with_ai(data.message)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"채팅 처리 실패: {str(e)}")
 
