@@ -225,6 +225,7 @@ export default function ExploreScreen() {
                 <Image
                   source={{ uri: selectedImageUri }}
                   style={styles.image}
+                  resizeMode="contain"
                 />
                 <TouchableOpacity
                   style={styles.removeButton}
@@ -267,6 +268,7 @@ export default function ExploreScreen() {
                 <Image
                   source={{ uri: selectedImageUri }}
                   style={styles.image}
+                  resizeMode="contain"
                 />
               </View>
 
@@ -682,11 +684,11 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 300,
+    height: 400,
     borderRadius: 12,
-    backgroundColor: "#f0f0f0",
-    borderWidth: 2,
-    borderColor: "#000",
+    backgroundColor: "#f8f8f8",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
   },
   removeButton: {
     position: "absolute",
