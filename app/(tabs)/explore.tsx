@@ -341,11 +341,18 @@ export default function ExploreScreen() {
                 </View>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.backButton]}
+                style={[
+                  styles.modalButton,
+                  { backgroundColor: isDarkMode ? "#ffffff" : "#f0f0f0" },
+                  styles.backButton,
+                ]}
                 onPress={goBack}
               >
                 <Text
-                  style={[styles.backButtonText, { color: themeColors.text }]}
+                  style={[
+                    styles.backButtonText,
+                    { color: isDarkMode ? "#000000" : "#333333" },
+                  ]}
                 >
                   뒤로가기
                 </Text>
@@ -752,7 +759,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   backButton: {
-    backgroundColor: "#f0f0f0",
+    // backgroundColor는 동적으로 설정됨
   },
   backButtonText: {
     fontSize: 16,

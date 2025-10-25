@@ -17,7 +17,14 @@ git commit -m "메시지"
 # 이전 커밋으로 되돌리기
 git reset --hard [코드 이름 a2c41ee]
 
+# 로컬 저장소와 원격 저장소 연결
+git remote add origin https://https://github.com/wydbstjd/Homefix.git
 
+# 브랜치 생성
+git checkout -b [브랜치명]
+
+# 깃허브 푸시
+git push origin [브랜치명]
 search.py:
 * FAISS 인덱스 로딩
 * 문서 검색 수행
