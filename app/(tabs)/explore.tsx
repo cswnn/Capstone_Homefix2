@@ -11,6 +11,7 @@ import {
   Alert,
   Image,
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -230,7 +231,10 @@ export default function ExploreScreen() {
               </Text>
             </View>
 
-            <View style={styles.content}>
+            <ScrollView
+              style={styles.content}
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.imageContainer}>
                 <Image
                   source={{ uri: selectedImageUri }}
@@ -266,7 +270,7 @@ export default function ExploreScreen() {
                   분석하기
                 </Text>
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           </>
         )}
 
@@ -303,7 +307,10 @@ export default function ExploreScreen() {
               </Text>
             </View>
 
-            <View style={styles.content}>
+            <ScrollView
+              style={styles.content}
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.imageContainer}>
                 <Image
                   source={{ uri: selectedImageUri }}
@@ -331,7 +338,7 @@ export default function ExploreScreen() {
                   분석 중...
                 </Text>
               </View>
-            </View>
+            </ScrollView>
           </>
         )}
 
@@ -513,7 +520,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   content: {
-    flex: 1,
     padding: 20,
   },
   imageContainer: {
@@ -521,7 +527,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 400,
+    height: 300,
     borderRadius: 12,
     backgroundColor: "#f8f8f8",
     borderWidth: 1,
