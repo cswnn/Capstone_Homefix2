@@ -212,10 +212,26 @@ export default function ExploreScreen() {
                 { backgroundColor: themeColors.headerBackground },
               ]}
             >
-              <Text style={[styles.title, { color: themeColors.text }]}>
+              <Text
+                style={[
+                  styles.title,
+                  {
+                    color: themeColors.text,
+                    fontSize: 24 * fontSizeMultiplier,
+                  },
+                ]}
+              >
                 사진으로 물어보기
               </Text>
-              <Text style={[styles.subtitle, { color: themeColors.text }]}>
+              <Text
+                style={[
+                  styles.subtitle,
+                  {
+                    color: themeColors.text,
+                    fontSize: 16 * fontSizeMultiplier,
+                  },
+                ]}
+              >
                 문제가 있는 곳을 사진으로 찍어서 정확한 해결책을 받아보세요
               </Text>
             </View>
@@ -231,7 +247,14 @@ export default function ExploreScreen() {
                   style={styles.removeButton}
                   onPress={removeImage}
                 >
-                  <Text style={styles.removeButtonText}>✕</Text>
+                  <Text
+                    style={[
+                      styles.removeButtonText,
+                      { fontSize: 16 * fontSizeMultiplier },
+                    ]}
+                  >
+                    ✕
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -240,7 +263,14 @@ export default function ExploreScreen() {
                 onPress={uploadImage}
                 disabled={isLoading}
               >
-                <Text style={styles.uploadButtonText}>분석하기</Text>
+                <Text
+                  style={[
+                    styles.uploadButtonText,
+                    { fontSize: 18 * fontSizeMultiplier },
+                  ]}
+                >
+                  분석하기
+                </Text>
               </TouchableOpacity>
             </View>
           </>
@@ -255,10 +285,26 @@ export default function ExploreScreen() {
                 { backgroundColor: themeColors.headerBackground },
               ]}
             >
-              <Text style={[styles.title, { color: themeColors.text }]}>
+              <Text
+                style={[
+                  styles.title,
+                  {
+                    color: themeColors.text,
+                    fontSize: 24 * fontSizeMultiplier,
+                  },
+                ]}
+              >
                 사진으로 물어보기
               </Text>
-              <Text style={[styles.subtitle, { color: themeColors.text }]}>
+              <Text
+                style={[
+                  styles.subtitle,
+                  {
+                    color: themeColors.text,
+                    fontSize: 16 * fontSizeMultiplier,
+                  },
+                ]}
+              >
                 문제가 있는 곳을 사진으로 찍어서 정확한 해결책을 받아보세요
               </Text>
             </View>
@@ -279,7 +325,15 @@ export default function ExploreScreen() {
                 ]}
               >
                 <ActivityIndicator size="large" color="#007AFF" />
-                <Text style={[styles.loadingText, { color: themeColors.text }]}>
+                <Text
+                  style={[
+                    styles.loadingText,
+                    {
+                      color: themeColors.text,
+                      fontSize: 16 * fontSizeMultiplier,
+                    },
+                  ]}
+                >
                   분석 중...
                 </Text>
               </View>
@@ -301,7 +355,15 @@ export default function ExploreScreen() {
                 { backgroundColor: themeColors.cardBackground },
               ]}
             >
-              <Text style={[styles.modalTitle, { color: themeColors.text }]}>
+              <Text
+                style={[
+                  styles.modalTitle,
+                  {
+                    color: themeColors.text,
+                    fontSize: 18 * fontSizeMultiplier,
+                  },
+                ]}
+              >
                 사진 선택
               </Text>
               <TouchableOpacity
@@ -316,7 +378,10 @@ export default function ExploreScreen() {
                   <Text
                     style={[
                       styles.modalButtonText,
-                      { color: themeColors.text },
+                      {
+                        color: themeColors.text,
+                        fontSize: 16 * fontSizeMultiplier,
+                      },
                     ]}
                   >
                     촬영하기
@@ -335,7 +400,10 @@ export default function ExploreScreen() {
                   <Text
                     style={[
                       styles.modalButtonText,
-                      { color: themeColors.text },
+                      {
+                        color: themeColors.text,
+                        fontSize: 16 * fontSizeMultiplier,
+                      },
                     ]}
                   >
                     갤러리에서 선택하기
@@ -353,7 +421,10 @@ export default function ExploreScreen() {
                 <Text
                   style={[
                     styles.backButtonText,
-                    { color: isDarkMode ? "#000000" : "#333333" },
+                    {
+                      color: isDarkMode ? "#000000" : "#333333",
+                      fontSize: 16 * fontSizeMultiplier,
+                    },
                   ]}
                 >
                   뒤로가기
