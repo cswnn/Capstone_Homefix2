@@ -279,6 +279,7 @@ def _keyword_groups(problem: str, location: str, supplies_required: list[str] | 
     if not groups:
         groups.append({"group": "기본", "required": True, "keywords": [problem] if problem else []})
     
+    print(groups)
     return groups
 
 def _fallback_results(groups: list) -> list:

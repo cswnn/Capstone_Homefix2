@@ -40,43 +40,6 @@ def return_solution(label: str, loc: str):
     return answer, selected_problem
 
 
-def get_supplies_for_problem(problem_title: str):
-    """homefix.md에서 해당 문제 섹션을 찾아 준비물(필수/선택) 리스트를 반환합니다.
-
-    반환 형식: (required_list, optional_list)
-    항목이 '(없음)'이면 빈 리스트로 처리합니다.
-    섹션을 찾지 못하면 ([], []) 반환.
-    """
-    # problem_texts는 "문제명" 문자열 목록이며, docs는 각 섹션 전체 텍스트
-    try:
-        idx = problem_texts.index(problem_title)
-    except ValueError:
-        return [], []
-
-    section = docs[idx]
-
-    def extract_after_heading(section_text: str, heading: str) -> list:
-        # heading 이후 여러 줄을 읽어서 파싱 (쉼표 또는 줄바꿈으로 구분)
-        pattern = rf"\*\*{re.escape(heading)}\*\*\s*\n((?:[^\n]+\n?)+?)(?=\*\*|---|\Z)"
-        m = re.search(pattern, section_text)
-        if not m:
-            return []
-        content = m.group(1).strip()
-        if not content or "(없음)" in content:
-            return []
-        # 쉼표로 구분된 경우
-        if ',' in content:
-            items = [it.strip() for it in content.split(',') if it.strip()]
-        # 줄바꿈으로 구분된 경우
-        else:
-            items = [line.strip() for line in content.split('\n') if line.strip()]
-        return items
-
-    required_items = extract_after_heading(section, "준비물(필수)")
-    optional_items = extract_after_heading(section, "준비물(선택)")
-
-    return required_items, optional_items
-
 def extract_solution_section(doc_text: str) -> str:
     """문서에서 **해결책** 섹션만 추출"""
     pattern = r"\*\*해결책\*\*\s*\n(.*?)(?=\*\*|---|\Z)"
@@ -84,6 +47,49 @@ def extract_solution_section(doc_text: str) -> str:
     if match:
         return match.group(1).strip()
     return ""
+
+def get_supplies_for_problem(problem_title: str):
+    """problem_title로 섹션 찾아서 준비물 파싱"""
+    try:
+        idx = problem_texts.index(problem_title)
+    except ValueError:
+        return [], []
+    
+    section = docs[idx]
+    return parse_supplies_from_document(section)
+
+def parse_supplies_from_document(doc_text: str) -> tuple[list[str], list[str]]:
+    """문서에서 준비물(필수/선택) 파싱"""
+    required_items = []
+    optional_items = []
+    
+    # **준비물(필수)** 다음 두 줄만 추출
+    req_pattern = r"\*\*준비물\(필수\)\*\*\n([^\n]+)\n?([^\n]*)?"
+    req_match = re.search(req_pattern, doc_text)
+    if req_match:
+        # 두 줄을 합치되, 빈 줄은 제외
+        req_lines = [req_match.group(1).strip(), req_match.group(2).strip()] if req_match.group(2) else [req_match.group(1).strip()]
+        req_content = '\n'.join([line for line in req_lines if line])
+        print(f"[DEBUG] 파싱된 준비물(필수): {repr(req_content)}")
+        if req_content and "(없음)" not in req_content:
+            required_items = [item.strip() for item in req_content.split(',') if item.strip()]
+        print(f"[DEBUG] 추출된 필수 준비물 리스트: {required_items}")
+    
+    # **준비물(선택)** 다음 두 줄만 추출
+    opt_pattern = r"\*\*준비물\(선택\)\*\*\n([^\n]+)\n?([^\n]*)?"
+    opt_match = re.search(opt_pattern, doc_text)
+    if opt_match:
+        # 두 줄을 합치되, 빈 줄은 제외
+        opt_lines = [opt_match.group(1).strip(), opt_match.group(2).strip()] if opt_match.group(2) else [opt_match.group(1).strip()]
+        opt_content = '\n'.join([line for line in opt_lines if line])
+        print(f"[DEBUG] 파싱된 준비물(선택): {repr(opt_content)}")
+        if opt_content and "(없음)" not in opt_content:
+            optional_items = [item.strip() for item in opt_content.split(',') if item.strip()]
+        print(f"[DEBUG] 추출된 선택 준비물 리스트: {optional_items}")
+    else:
+        print(f"[DEBUG] 준비물(선택) 패턴 매칭 실패")
+    
+    return required_items, optional_items
 
 # 사용자 텍스트에 대한 솔루션 반환
 def chat_with_ai(user_message: str):
@@ -141,38 +147,11 @@ def chat_with_ai(user_message: str):
         if title_match:
             problem_title = title_match.group(1).strip()
     
-    # 준비물 정보 추출
+    # 준비물 정보 추출 (문서에서 직접 파싱)
     required_items, optional_items = [], []
-    if problem_title:
-        required_items, optional_items = get_supplies_for_problem(problem_title)
-    
-    # 준비물이 없을 때 문서에서 직접 파싱
-    if not required_items and not optional_items and filtered_docs:
+    if filtered_docs:
         doc_text = filtered_docs[0]
-        
-        # **준비물(필수)** 패턴 찾기 - 여러 줄 허용
-        req_pattern = r"\*\*준비물\(필수\)\*\*\s*\n((?:[^\n]+\n?)+?)(?=\*\*|---|\Z)"
-        req_match = re.search(req_pattern, doc_text)
-        if req_match:
-            req_lines = req_match.group(1).strip()
-            if req_lines and "(없음)" not in req_lines:
-                # 쉼표로 구분된 경우 또는 줄바꿈으로 구분된 경우 모두 처리
-                if ',' in req_lines:
-                    required_items = [it.strip() for it in req_lines.split(',') if it.strip()]
-                else:
-                    required_items = [line.strip() for line in req_lines.split('\n') if line.strip()]
-        
-        # **준비물(선택)** 패턴 찾기 - 여러 줄 허용
-        opt_pattern = r"\*\*준비물\(선택\)\*\*\s*\n((?:[^\n]+\n?)+?)(?=\*\*|---|\Z)"
-        opt_match = re.search(opt_pattern, doc_text)
-        if opt_match:
-            opt_lines = opt_match.group(1).strip()
-            if opt_lines and "(없음)" not in opt_lines:
-                # 쉼표로 구분된 경우 또는 줄바꿈으로 구분된 경우 모두 처리
-                if ',' in opt_lines:
-                    optional_items = [it.strip() for it in opt_lines.split(',') if it.strip()]
-                else:
-                    optional_items = [line.strip() for line in opt_lines.split('\n') if line.strip()]
+        required_items, optional_items = parse_supplies_from_document(doc_text)
     
     # 준비물 검색 링크 생성
     supply_links = []
