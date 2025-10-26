@@ -418,11 +418,12 @@ export default function ResultScreen() {
                 </View>
 
                 <View style={styles.settingsContent}>
-                  <View
+                  <TouchableOpacity
                     style={[
                       styles.settingsItem,
                       { borderBottomColor: themeColors.borderColor },
                     ]}
+                    onPress={toggleDarkMode}
                   >
                     <View style={styles.settingsIcon}>
                       <View
@@ -438,14 +439,12 @@ export default function ResultScreen() {
                       다크모드
                     </Text>
                     <View style={styles.toggleContainer}>
-                      <TouchableOpacity
+                      <View
                         style={[
                           styles.toggle,
-                          isDarkMode
-                            ? styles.toggleActive
-                            : { backgroundColor: themeColors.borderColor },
+                          { backgroundColor: themeColors.buttonBackground },
+                          isDarkMode && styles.toggleActive,
                         ]}
-                        onPress={toggleDarkMode}
                       >
                         <View
                           style={[
@@ -453,9 +452,9 @@ export default function ResultScreen() {
                             isDarkMode && styles.toggleThumbActive,
                           ]}
                         />
-                      </TouchableOpacity>
+                      </View>
                     </View>
-                  </View>
+                  </TouchableOpacity>
 
                   <View
                     style={[
@@ -516,35 +515,6 @@ export default function ResultScreen() {
                       </Text>
                     </TouchableOpacity>
                   </View>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.settingsItem,
-                      { borderBottomColor: themeColors.borderColor },
-                    ]}
-                  >
-                    <View style={styles.settingsIcon}>
-                      <View style={styles.inquiryIcon}>
-                        <View
-                          style={[
-                            styles.personIcon,
-                            { backgroundColor: themeColors.text },
-                          ]}
-                        />
-                        <View
-                          style={[
-                            styles.wrenchIcon,
-                            { backgroundColor: themeColors.text },
-                          ]}
-                        />
-                      </View>
-                    </View>
-                    <Text
-                      style={[styles.settingsText, { color: themeColors.text }]}
-                    >
-                      문의하기
-                    </Text>
-                  </TouchableOpacity>
                 </View>
               </Animated.View>
             </TouchableOpacity>
