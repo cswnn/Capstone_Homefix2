@@ -23,11 +23,7 @@ const { width } = Dimensions.get("window");
 const panelWidth = width * 0.7;
 
 export default function ExploreScreen() {
-  const {
-    themeColors,
-    fontSizeMultiplier,
-    isDarkMode,
-  } = useTheme();
+  const { themeColors, fontSizeMultiplier, isDarkMode } = useTheme();
   const params = useLocalSearchParams();
   const [base64Data, setBase64Data] = useState<string | null>(null);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);

@@ -17,12 +17,14 @@ interface SettingsModalProps {
   visible: boolean;
   onClose: () => void;
   slideAnim: Animated.Value;
+  showInquiry?: boolean;
 }
 
 export default function SettingsModal({
   visible,
   onClose,
   slideAnim,
+  showInquiry = false,
 }: SettingsModalProps) {
   const {
     themeColors,
@@ -172,6 +174,37 @@ export default function SettingsModal({
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              {showInquiry && (
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    { borderBottomColor: themeColors.borderColor },
+                  ]}
+                >
+                  <View style={styles.settingsIcon}>
+                    <View style={styles.inquiryIcon}>
+                      <View
+                        style={[
+                          styles.personIcon,
+                          { backgroundColor: themeColors.text },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.wrenchIcon,
+                          { backgroundColor: themeColors.text },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                  <Text
+                    style={[styles.settingsText, { color: themeColors.text }]}
+                  >
+                    문의하기
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </Animated.View>
         </TouchableOpacity>
@@ -295,6 +328,23 @@ const styles = StyleSheet.create({
   fontSizeText: {
     fontSize: 12,
     fontWeight: "500",
+  },
+  inquiryIcon: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  personIcon: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginBottom: 2,
+  },
+  wrenchIcon: {
+    width: 12,
+    height: 2,
+    borderRadius: 1,
   },
 });
 
