@@ -24,15 +24,10 @@ export default function SettingsModal({
   visible,
   onClose,
   slideAnim,
-  showInquiry = false,
+  showInquiry = true,
 }: SettingsModalProps) {
-  const {
-    themeColors,
-    fontSize,
-    setFontSize,
-    isDarkMode,
-    toggleDarkMode,
-  } = useTheme();
+  const { themeColors, fontSize, setFontSize, isDarkMode, toggleDarkMode } =
+    useTheme();
 
   return (
     <Modal
@@ -94,13 +89,12 @@ export default function SettingsModal({
               >
                 <View style={styles.settingsIcon}>
                   <View
-                    style={[
-                      styles.sunIcon,
-                      { borderColor: themeColors.text },
-                    ]}
+                    style={[styles.sunIcon, { borderColor: themeColors.text }]}
                   />
                 </View>
-                <Text style={[styles.settingsText, { color: themeColors.text }]}>
+                <Text
+                  style={[styles.settingsText, { color: themeColors.text }]}
+                >
                   다크모드
                 </Text>
                 <View style={styles.toggleContainer}>
@@ -130,7 +124,9 @@ export default function SettingsModal({
               >
                 <View style={styles.settingsIcon}>
                   <View style={styles.fontIcon}>
-                    <Text style={[styles.fontText, { color: themeColors.text }]}>
+                    <Text
+                      style={[styles.fontText, { color: themeColors.text }]}
+                    >
                       A
                     </Text>
                     <Text
@@ -143,7 +139,9 @@ export default function SettingsModal({
                     </Text>
                   </View>
                 </View>
-                <Text style={[styles.settingsText, { color: themeColors.text }]}>
+                <Text
+                  style={[styles.settingsText, { color: themeColors.text }]}
+                >
                   글자크기
                 </Text>
                 <TouchableOpacity
@@ -347,4 +345,3 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
 });
-
