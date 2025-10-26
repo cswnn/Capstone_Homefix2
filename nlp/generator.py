@@ -103,8 +103,7 @@ def is_specific_question(question, conversation_context=""):
         max_tokens=50
     )
     
-    result = response.choices[0].message.content.strip()
-    print(f"GPT 구체성 판단: {question} → {result}")
+    result = response.choices[0].message.content.strip().lower()
     
     return result == "구체적"
 
@@ -140,7 +139,58 @@ def generate_clarification_question(question):
     )
     
     result = response.choices[0].message.content.strip()
-    print(f"GPT 추가 질문 생성: {question} → {result}")
+    
+    return result
+
+def generate_natural_query(original_question, additional_info):
+    """GPT를 사용해서 원래 질문과 추가 정보를 자연스럽게 합쳐서 완전한 질문 생성"""
+    
+    prompt = f"""
+다음 원래 질문과 사용자가 추가로 제공한 정보를 하나의 자연스럽고 구체적인 질문으로 합쳐주세요.
+
+원래 질문: "{original_question}"
+추가 정보: "{additional_info}"
+
+다음 예시를 참고하여 자연스럽고 명확한 질문으로 만들어주세요:
+
+예시 1:
+- 원래: "기름때 제거법"
+- 추가: "욕실"
+- 결과: "욕실 기름때 제거법"
+
+예시 2:
+- 원래: "어디에서"
+- 추가: "곰팡이 제거"
+- 결과: "곰팡이 제거"
+
+예시 3:
+- 원래: "화장실에서"
+- 추가: "곰팡이"
+- 결과: "화장실 곰팡이 제거"
+
+예시 4:
+- 원래: "첫 번째 질문"
+- 추가: "이미 완전한 두 번째 질문입니다"
+- 결과: "이미 완전한 두 번째 질문입니다"
+
+중요:
+- 불필요한 단어 없이 간결하게 작성
+- 문법적으로 자연스러운 한국어로 작성
+- 제거, 해결법, 제거법 등 동사는 유지
+- 위치는 문제 앞에 배치 (예: "욕실 기름때 제거법")
+""".strip()
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "사용자의 원래 질문과 추가 정보를 자연스럽고 명확한 하나의 질문으로 합치는 전문가입니다."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.3,
+        max_tokens=100
+    )
+    
+    result = response.choices[0].message.content.strip()
     
     return result
 
@@ -170,8 +220,9 @@ def needs_context(question, conversation_context=""):
 
 **❌ 문맥이 불필요한 질문 (독립적인 새 질문)**
 1. **완전한 새 주제**: "변기 막힘 해결법", "후라이팬 기름때 제거"
-2. **구체적 문제**: "화장실 곰팡이 제거", "수전 물때 제거"
+2. **구체적 문제**: "화장실 곰팡이 제거", "수전 물때 제거", "기름때 제거법"
 3. **명시적 정보**: 대상과 문제가 모두 명확히 제시된 경우
+4. ⚠️ 주의: "OO 제거법", "OO 제거", "OO 해결법" 같은 표현은 독립적인 새 질문입니다!
 
 **문맥 필요 예시:**
 - "가장 효과적인 방법은 뭐야?" ✅
@@ -201,8 +252,7 @@ def needs_context(question, conversation_context=""):
         max_tokens=50
     )
     
-    result = response.choices[0].message.content.strip()
-    print(f"GPT 문맥 필요성 판단: {question} → {result}")
+    result = response.choices[0].message.content.strip().lower()
     
     return result == "필요"
 
@@ -250,6 +300,5 @@ def generate_contextual_answer(question, conversation_context, search_context=""
     )
     
     result = response.choices[0].message.content.strip()
-    print(f"GPT 문맥 기반 답변 생성: {question}")
     
     return result

@@ -1,14 +1,11 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from efficientnet import run_pipeline, load_model
 from nlp.main import return_solution, chat_with_ai, get_supplies_for_problem  # ← GPT 기반 해결책 생성 함수 및 채팅 함수
 from PIL import Image
 from pydantic import BaseModel
 import io, base64, socket
-import os, time, hmac, hashlib
-from urllib.parse import urlencode
-import requests
-import json
+import os
 import re
 from googleapiclient.discovery import build
 
@@ -279,7 +276,6 @@ def _keyword_groups(problem: str, location: str, supplies_required: list[str] | 
     if not groups:
         groups.append({"group": "기본", "required": True, "keywords": [problem] if problem else []})
     
-    print(groups)
     return groups
 
 def _fallback_results(groups: list) -> list:

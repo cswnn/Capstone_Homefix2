@@ -214,10 +214,13 @@ export default function ResultScreen() {
                 { color: themeColors.text, fontSize: 16 * fontSizeMultiplier },
               ]}
             >
-              {renderFormattedText(solution, {
-                color: themeColors.text,
-                fontSize: 16 * fontSizeMultiplier,
-              })}
+              {renderFormattedText(
+                Array.isArray(solution) ? solution.join(" ") : solution,
+                {
+                  color: themeColors.text,
+                  fontSize: 16 * fontSizeMultiplier,
+                }
+              )}
             </Text>
           </View>
 

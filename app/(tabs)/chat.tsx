@@ -8,7 +8,6 @@ import {
   Dimensions,
   Alert,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -16,8 +15,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Linking,
-  Image,
   Animated,
 } from "react-native";
 import { openBrowserAsync } from "expo-web-browser";
@@ -54,10 +51,7 @@ const { width } = Dimensions.get("window");
 const panelWidth = width * 0.7;
 
 export default function ChatScreen() {
-  const {
-    themeColors,
-    fontSizeMultiplier,
-  } = useTheme();
+  const { themeColors, fontSizeMultiplier } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",

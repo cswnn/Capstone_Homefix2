@@ -70,7 +70,6 @@ def parse_supplies_from_document(doc_text: str) -> tuple[list[str], list[str]]:
         # 두 줄을 합치되, 빈 줄은 제외
         req_lines = [req_match.group(1).strip(), req_match.group(2).strip()] if req_match.group(2) else [req_match.group(1).strip()]
         req_content = '\n'.join([line for line in req_lines if line])
-        print(f"[DEBUG] 파싱된 준비물(필수): {repr(req_content)}")
         if req_content and "(없음)" not in req_content:
             required_items = [item.strip() for item in req_content.split(',') if item.strip()]
         print(f"[DEBUG] 추출된 필수 준비물 리스트: {required_items}")
@@ -82,7 +81,6 @@ def parse_supplies_from_document(doc_text: str) -> tuple[list[str], list[str]]:
         # 두 줄을 합치되, 빈 줄은 제외
         opt_lines = [opt_match.group(1).strip(), opt_match.group(2).strip()] if opt_match.group(2) else [opt_match.group(1).strip()]
         opt_content = '\n'.join([line for line in opt_lines if line])
-        print(f"[DEBUG] 파싱된 준비물(선택): {repr(opt_content)}")
         if opt_content and "(없음)" not in opt_content:
             optional_items = [item.strip() for item in opt_content.split(',') if item.strip()]
         print(f"[DEBUG] 추출된 선택 준비물 리스트: {optional_items}")
@@ -136,7 +134,6 @@ def chat_with_ai(user_message: str):
     
     # 가장 관련성 높은 문서에서 해결책 추출
     solution_text = ""
-    problem_title = ""
     
     if filtered_docs:
         # 첫 번째 문서에서 해결책 섹션만 추출

@@ -1,5 +1,5 @@
 from typing import Dict, List, Tuple, Optional
-from .generator import is_specific_question, generate_clarification_question, needs_context, generate_contextual_answer
+from .generator import is_specific_question, generate_clarification_question, needs_context, generate_contextual_answer, generate_natural_query
 
 class ConversationManager:
     """대화 상태 관리 클래스 - 문맥 유지"""
@@ -59,7 +59,9 @@ def gpt_based_specificity(user_message: str, context: Optional[str] = None):
     """GPT를 사용한 구체성 판단 (문맥 고려)"""
     try:
         conversation_context = conversation_manager.get_conversation_context()
-        return is_specific_question(user_message, conversation_context)
+        is_specific = is_specific_question(user_message, conversation_context)
+        
+        return is_specific
     except Exception as e:
         print(f"GPT 구체성 판단 중 에러 발생: {e}")
         # 에러 발생 시 기본적으로 구체적이라고 판단 (fallback)
@@ -74,17 +76,22 @@ def generate_clarification_question_gpt(user_message: str, question_type: str) -
     try:
         return generate_clarification_question(user_message)
     except Exception as e:
-        print(f"GPT 추가 질문 생성 중 에러 발생: {e}")
         # 에러 발생 시 기본 추가 질문 반환
         return "더 구체적인 정보가 필요합니다. 어떤 문제가 발생했고, 어디에서 발생했는지 알려주세요."
 
 def create_specific_query(user_message: str) -> str:
-    """구체적인 검색 쿼리 생성"""
+    """GPT를 사용해서 구체적인 검색 쿼리 생성"""
     
     if conversation_manager.waiting_for_clarification:
         # 추가 정보를 받은 경우
         original_question = conversation_manager.user_original_question or ""
-        specific_query = f"{user_message}에서 {original_question}"
+        
+        # GPT를 사용해서 자연스러운 문장 생성
+        try:
+            specific_query = generate_natural_query(original_question, user_message)
+        except Exception as e:
+            # 에러 발생 시 기본 방식
+            specific_query = f"{user_message} {original_question}"
         
         # 대화 상태 초기화
         conversation_manager.reset()
@@ -126,6 +133,8 @@ def process_user_message(user_message: str, is_new_topic: bool = False) -> Tuple
     # 문맥이 필요한지 먼저 확인
     conversation_context = conversation_manager.get_conversation_context()
     requires_context = needs_context(user_message, conversation_context)
+    
+    print(f"  → 문맥 필요: {'Yes ✅' if requires_context else 'No ❌'}")
     
     if requires_context:
         # 문맥이 필요한 질문이므로 바로 문맥 기반 답변 생성
