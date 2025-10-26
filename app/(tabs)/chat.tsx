@@ -129,18 +129,41 @@ export default function ChatScreen() {
         message: inputText.trim(),
       });
 
-      // 구체적인 질문일 때만 준비물/제품 추천 요청
+      // 구체적인 질문일 때 준비물 정보 가져오기
       let recoGroups: RecoGroup[] = [];
-      if (response.data.is_specific) {
-        try {
-          const recoRes = await apiClient.post("/recommend/", {
-            problem: inputText.trim(),
-            location: "",
+      if (
+        response.data.is_specific &&
+        response.data.supplies &&
+        response.data.supplies.length > 0
+      ) {
+        // backend에서 준비물 링크 정보 가져오기
+        const requiredItems = response.data.supplies
+          .filter((s: any) => s.type === "필수")
+          .map((s: any) => ({
+            title: s.keyword,
+            link: s.link,
+          }));
+        const optionalItems = response.data.supplies
+          .filter((s: any) => s.type === "선택")
+          .map((s: any) => ({
+            title: s.keyword,
+            link: s.link,
+          }));
+
+        // RecoGroup 형식으로 변환
+        if (requiredItems.length > 0) {
+          recoGroups.push({
+            group: "준비물(필수)",
+            required: true,
+            items: requiredItems,
           });
-          recoGroups = recoRes?.data?.groups || [];
-        } catch (e) {
-          // 추천 실패는 무시하고 채팅만 표시
-          console.warn("추천 요청 실패", e);
+        }
+        if (optionalItems.length > 0) {
+          recoGroups.push({
+            group: "준비물(선택)",
+            required: false,
+            items: optionalItems,
+          });
         }
       }
 

@@ -4,6 +4,7 @@ from .conversation import process_user_message
 import numpy as np
 from sklearn.preprocessing import normalize
 import re
+import urllib.parse
 
 # 서버 시작 시 1회만 로딩
 retriever, index, docs, problem_texts = load_search_index()
@@ -55,22 +56,34 @@ def get_supplies_for_problem(problem_title: str):
     section = docs[idx]
 
     def extract_after_heading(section_text: str, heading: str) -> list:
-        # heading 이후 첫 번째 비어있지 않은 라인의 아이템들을 파싱 (쉼표로 분리)
-        pattern = rf"\*\*{re.escape(heading)}\*\*\s*\n([^\n]*)"
+        # heading 이후 여러 줄을 읽어서 파싱 (쉼표 또는 줄바꿈으로 구분)
+        pattern = rf"\*\*{re.escape(heading)}\*\*\s*\n((?:[^\n]+\n?)+?)(?=\*\*|---|\Z)"
         m = re.search(pattern, section_text)
         if not m:
             return []
-        line = m.group(1).strip()
-        if not line or "(없음)" in line:
+        content = m.group(1).strip()
+        if not content or "(없음)" in content:
             return []
-        # 쉼표로 분리, 공백 제거
-        items = [it.strip() for it in line.split(',') if it.strip()]
+        # 쉼표로 구분된 경우
+        if ',' in content:
+            items = [it.strip() for it in content.split(',') if it.strip()]
+        # 줄바꿈으로 구분된 경우
+        else:
+            items = [line.strip() for line in content.split('\n') if line.strip()]
         return items
 
     required_items = extract_after_heading(section, "준비물(필수)")
     optional_items = extract_after_heading(section, "준비물(선택)")
 
     return required_items, optional_items
+
+def extract_solution_section(doc_text: str) -> str:
+    """문서에서 **해결책** 섹션만 추출"""
+    pattern = r"\*\*해결책\*\*\s*\n(.*?)(?=\*\*|---|\Z)"
+    match = re.search(pattern, doc_text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return ""
 
 # 사용자 텍스트에 대한 솔루션 반환
 def chat_with_ai(user_message: str):
@@ -80,7 +93,7 @@ def chat_with_ai(user_message: str):
     문맥이 필요한 질문의 경우 이전 대화를 고려한 답변을 생성합니다.
     
     Returns:
-        dict: {"response": 답변, "is_specific": 구체성 여부}
+        dict: {"response": 답변, "is_specific": 구체성 여부, "supplies": 준비물 정보}
     """
     
     # 대화 처리
@@ -115,6 +128,67 @@ def chat_with_ai(user_message: str):
     # 문서 검색
     filtered_docs = search_documents(search_query, retriever, index, docs)
     
+    # 가장 관련성 높은 문서에서 해결책 추출
+    solution_text = ""
+    problem_title = ""
+    
+    if filtered_docs:
+        # 첫 번째 문서에서 해결책 섹션만 추출
+        solution_text = extract_solution_section(filtered_docs[0])
+        
+        # 문제 제목 추출 (추가 보조 정보)
+        title_match = re.search(r"## 문제[:：](.+)", filtered_docs[0])
+        if title_match:
+            problem_title = title_match.group(1).strip()
+    
+    # 준비물 정보 추출
+    required_items, optional_items = [], []
+    if problem_title:
+        required_items, optional_items = get_supplies_for_problem(problem_title)
+    
+    # 준비물이 없을 때 문서에서 직접 파싱
+    if not required_items and not optional_items and filtered_docs:
+        doc_text = filtered_docs[0]
+        
+        # **준비물(필수)** 패턴 찾기 - 여러 줄 허용
+        req_pattern = r"\*\*준비물\(필수\)\*\*\s*\n((?:[^\n]+\n?)+?)(?=\*\*|---|\Z)"
+        req_match = re.search(req_pattern, doc_text)
+        if req_match:
+            req_lines = req_match.group(1).strip()
+            if req_lines and "(없음)" not in req_lines:
+                # 쉼표로 구분된 경우 또는 줄바꿈으로 구분된 경우 모두 처리
+                if ',' in req_lines:
+                    required_items = [it.strip() for it in req_lines.split(',') if it.strip()]
+                else:
+                    required_items = [line.strip() for line in req_lines.split('\n') if line.strip()]
+        
+        # **준비물(선택)** 패턴 찾기 - 여러 줄 허용
+        opt_pattern = r"\*\*준비물\(선택\)\*\*\s*\n((?:[^\n]+\n?)+?)(?=\*\*|---|\Z)"
+        opt_match = re.search(opt_pattern, doc_text)
+        if opt_match:
+            opt_lines = opt_match.group(1).strip()
+            if opt_lines and "(없음)" not in opt_lines:
+                # 쉼표로 구분된 경우 또는 줄바꿈으로 구분된 경우 모두 처리
+                if ',' in opt_lines:
+                    optional_items = [it.strip() for it in opt_lines.split(',') if it.strip()]
+                else:
+                    optional_items = [line.strip() for line in opt_lines.split('\n') if line.strip()]
+    
+    # 준비물 검색 링크 생성
+    supply_links = []
+    for item in required_items:
+        supply_links.append({
+            "keyword": item,
+            "type": "필수",
+            "link": f"https://search.shopping.naver.com/search/all?query={urllib.parse.quote(item)}"
+        })
+    for item in optional_items:
+        supply_links.append({
+            "keyword": item,
+            "type": "선택",
+            "link": f"https://search.shopping.naver.com/search/all?query={urllib.parse.quote(item)}"
+        })
+    
     # 문맥 구성
     context = "\n\n---\n\n".join(filtered_docs)
     
@@ -125,18 +199,25 @@ def chat_with_ai(user_message: str):
     위의 관련 문서들을 참고하여 다음을 포함한 답변을 제공해주세요:
     - 안전을 최우선으로 고려한 조언
     - 단계별 해결 방법
-    - 필요한 도구나 재료
     - 전문가 상담이 필요한 경우 언급
+    
+    ⚠️ 중요: 준비물이나 필요한 도구/재료를 직접 언급하지 마세요. 
+    준비물은 별도로 제공됩니다.
     """
     
     # 최종 컨텍스트 결합
     final_context = f"{additional_context}\n\n관련 문서:\n{context}"
     
-    # GPT로 응답 생성
+    # GPT로 응답 생성 (짧게)
     answer = generate_answer(search_query, final_context)
     
     # 대화 기록에 최종 답변 추가
     from .conversation import conversation_manager
     conversation_manager.add_to_history(response_message, answer)
     
-    return {"response": answer, "is_specific": True}
+    return {
+        "response": answer,
+        "is_specific": True,
+        "supplies": supply_links,
+        "solution": solution_text
+    }
