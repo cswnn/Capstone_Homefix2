@@ -13,10 +13,6 @@ def generate_answer(question, context):
         문맥에 없는 내용은 상상하지 말고, 모르면 모른다고 말하세요.
         📌 문맥의 내용을 요약하지 말고, 단계별로 구체적으로 설명해주세요.
         특히 "해결 방법", "예방 팁"을 빠짐없이 반영하여 설명해주세요.
-        
-        ⚠️ 중요: 사용자 질문에 오타가 있다면, 답변에서 올바른 단어로 수정해서 사용하세요.
-        예시: 사용자가 "슈전 물때 해결법"이라고 물어봤다면, 답변에서는 "수전 물때 해결법"으로 수정해서 답변하세요.
-        오타를 지적하지 말고 자연스럽게 올바른 단어로 답변하세요.
 
         [문맥 정보]
         {context}
@@ -32,7 +28,7 @@ def generate_answer(question, context):
             {"role": "user", "content": prompt}
         ],
         temperature=0.7,
-        max_tokens=1024
+        max_tokens=2048
     )
     return response.choices[0].message.content.strip()
 
@@ -302,7 +298,7 @@ def generate_contextual_answer(question, conversation_context, search_context=""
             {"role": "user", "content": prompt}
         ],
         temperature=0.7,
-        max_tokens=1024
+        max_tokens=2048
     )
     
     result = response.choices[0].message.content.strip()

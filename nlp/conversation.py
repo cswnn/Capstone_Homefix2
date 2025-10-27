@@ -21,21 +21,39 @@ class ConversationManager:
         self.conversation_history = []
     
     def add_to_history(self, user_message: str, ai_response: str):
-        """대화 기록에 추가"""
+        """대화 기록에 추가 (최대 3개까지만 유지)"""
         self.conversation_history.append({
             "user": user_message,
             "ai": ai_response
         })
+        
+        # 대화 기록이 너무 길어지면 오래된 것부터 삭제 (최대 3개 유지)
+        if len(self.conversation_history) > 3:
+            self.conversation_history = self.conversation_history[-3:]
     
     def get_conversation_context(self) -> str:
-        """대화 문맥을 문자열로 반환"""
+        """대화 문맥을 문자열로 반환 (길이 제한 적용)"""
         if not self.conversation_history:
             return ""
         
         context_parts = []
-        for exchange in self.conversation_history:
-            context_parts.append(f"사용자: {exchange['user']}")
-            context_parts.append(f"AI: {exchange['ai']}")
+        total_length = 0
+        max_length = 2000  # 최대 2000자
+        
+        # 최근 대화부터 역순으로 처리
+        for exchange in reversed(self.conversation_history):
+            user_text = f"사용자: {exchange['user']}"
+            ai_text = f"AI: {exchange['ai']}"
+            
+            # 길이 체크
+            text_length = len(user_text) + len(ai_text)
+            if total_length + text_length > max_length:
+                break
+            
+            # 리스트 앞에 추가 (insert는 0번 인덱스에 삽입)
+            context_parts.insert(0, ai_text)
+            context_parts.insert(0, user_text)
+            total_length += text_length
         
         return "\n".join(context_parts)
 

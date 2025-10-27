@@ -15,8 +15,8 @@ def return_solution(label: str, loc: str):
     # 문서 검색
     filtered_docs = search_documents(question, retriever, index, docs)
 
-    # 해결책 섹션 추출 (## 문제부터 **준비물(필수)** 이전까지)
-    solution_text = extract_solution_section(filtered_docs[0]) if filtered_docs else ""
+    # 모든 문서에서 해결책 섹션 추출
+    solution_text = extract_all_solutions(filtered_docs) if filtered_docs else ""
 
     # GPT로 해결책 생성
     answer = generate_answer(question, solution_text)
@@ -39,6 +39,23 @@ def extract_solution_section(doc_text: str) -> str:
     if match:
         return match.group(1).strip()
     return ""
+
+def extract_all_solutions(filtered_docs: list, max_length: int = 4000) -> str:
+    """모든 검색된 문서에서 해결책을 추출"""
+    solutions = []
+    total_length = 0
+    
+    for doc in filtered_docs:
+        solution = extract_solution_section(doc)
+        if solution:
+            # 길이 제한 체크
+            solution_length = len(solution)
+            if total_length + solution_length > max_length:
+                break
+            solutions.append(solution)
+            total_length += solution_length
+    
+    return "\n\n---\n\n".join(solutions)
 
 def get_supplies_for_problem(problem_title: str):
     """problem_title로 섹션 찾아서 준비물 파싱"""
@@ -111,41 +128,51 @@ def chat_with_ai(user_message: str):
         # 문맥 기반 답변 생성
         answer = generate_contextual_answer(response_message, conversation_context, search_context)
         
-        # 대화 기록에 최종 답변 추가
-        conversation_manager.add_to_history(response_message, answer)
+        # 대화 기록에 최종 답변 추가 (추가하면 오류 발생)
+        # conversation_manager.add_to_history(response_message, answer)
         
         return {"response": answer, "is_specific": True}
     
     # 일반적인 최종 답변을 생성하는 경우
     filtered_docs = search_documents(response_message, retriever, index, docs)
     
-    # 해결책 섹션 추출
-    solution_text = extract_solution_section(filtered_docs[0]) if filtered_docs else ""
+    # 모든 문서에서 해결책 섹션 추출
+    solution_text = extract_all_solutions(filtered_docs) if filtered_docs else ""
     
-    # 준비물 정보 추출
-    required_items, optional_items = parse_supplies_from_document(filtered_docs[0]) if filtered_docs else ([], [])
+    # 모든 문서에서 준비물 정보 추출
+    all_required_items = []
+    all_optional_items = []
+    if filtered_docs:
+        for doc in filtered_docs:
+            required_items, optional_items = parse_supplies_from_document(doc)
+            all_required_items.extend(required_items)
+            all_optional_items.extend(optional_items)
     
-    # 준비물 검색 링크 생성
-    supply_links = [
-        {
-            "keyword": item,
-            "type": "필수",
-            "link": f"https://search.shopping.naver.com/search/all?query={urllib.parse.quote(item)}"
-        }
-        for item in required_items
-    ] + [
-        {
-            "keyword": item,
-            "type": "선택",
-            "link": f"https://search.shopping.naver.com/search/all?query={urllib.parse.quote(item)}"
-        }
-        for item in optional_items
-    ]
+    # 준비물 검색 링크 생성 (중복 제거)
+    supply_links = []
+    seen_items = set()
+    
+    for item in all_required_items:
+        if item not in seen_items:
+            supply_links.append({
+                "keyword": item,
+                "type": "필수",
+                "link": f"https://search.shopping.naver.com/search/all?query={urllib.parse.quote(item)}"
+            })
+            seen_items.add(item)
+    
+    for item in all_optional_items:
+        if item not in seen_items:
+            supply_links.append({
+                "keyword": item,
+                "type": "선택",
+                "link": f"https://search.shopping.naver.com/search/all?query={urllib.parse.quote(item)}"
+            })
+            seen_items.add(item)
 
-    print(solution_text)
     answer = generate_answer(response_message, solution_text)
-    
-    # 대화 기록에 추가
+    print(answer)
+    # 대화 기록에 추가 (추가하면 오류 발생)
     from .conversation import conversation_manager
     conversation_manager.add_to_history(response_message, answer)
     
