@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // 기본 API 설정
-const DEFAULT_BASE_URL = "http://172.30.1.6:8080";
+const DEFAULT_BASE_URL = "http://172.30.1.6:8000";
 
 class ApiConfig {
   private baseUrl: string = DEFAULT_BASE_URL;

@@ -33,7 +33,7 @@ def load_search_index(md_path="homefix.md"):
 
     return retriever, index, docs, problem_texts
 
-def search_documents(query: str, retriever, index, docs, k=5):
+def search_documents(query: str, retriever, index, docs, k=2):
     """문서 검색 수행"""
     # 질문 임베딩
     query_embedding = retriever.encode([query], convert_to_tensor=False)
@@ -44,7 +44,7 @@ def search_documents(query: str, retriever, index, docs, k=5):
     distances, labels = index.search(query_embedding, k=k)
     best_dist = distances[0][0]
     filtered_docs = [
-        docs[i] for i, dist in zip(labels[0], distances[0]) if dist <= best_dist + 0.05
+        docs[i] for i, dist in zip(labels[0], distances[0]) if dist <= best_dist + 0.2
     ]
 
     return filtered_docs
