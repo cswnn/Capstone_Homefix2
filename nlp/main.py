@@ -15,11 +15,11 @@ def return_solution(label: str, loc: str):
     # 문서 검색
     filtered_docs = search_documents(question, retriever, index, docs)
 
-    # 문맥 구성
-    context = "\n\n---\n\n".join(filtered_docs)
+    # 해결책 섹션 추출 (## 문제부터 **준비물(필수)** 이전까지)
+    solution_text = extract_solution_section(filtered_docs[0]) if filtered_docs else ""
 
     # GPT로 해결책 생성
-    answer = generate_answer(question, context)
+    answer = generate_answer(question, solution_text)
 
     # 최상위 매칭 문서의 문제 제목 추출
     selected_problem = label
@@ -32,9 +32,10 @@ def return_solution(label: str, loc: str):
 
 
 def extract_solution_section(doc_text: str) -> str:
-    """문서에서 **해결책** 섹션만 추출"""
-    pattern = r"\*\*해결책\*\*\s*\n(.*?)(?=\*\*|---|\Z)"
-    match = re.search(pattern, doc_text, re.DOTALL)
+    """문서에서 ## 문제부터 **준비물(필수)** 이전까지 추출"""
+    # ## 문제부터 추출 (해결책, 팁 포함)
+    pattern = r"(## 문제[:：][^\n]+[\s\S]*?)(?=\*\*준비물\(필수\)\*\*|$)"
+    match = re.search(pattern, doc_text)
     if match:
         return match.group(1).strip()
     return ""
@@ -140,21 +141,9 @@ def chat_with_ai(user_message: str):
         }
         for item in optional_items
     ]
-    
-    # 문맥 구성 (해결책 섹션만 사용)
-    context = solution_text if solution_text else "\n\n---\n\n".join(filtered_docs)
-    
-    # 컨텍스트 정보
-    additional_context = f"""사용자 질문: {response_message}
 
-위의 해결 방법을 참고하여 다음을 포함한 답변을 제공해주세요:
-- 안전을 최우선으로 고려한 조언
-- 단계별 해결 방법
-- 전문가 상담이 필요한 경우 언급"""
-    
-    # GPT로 응답 생성
-    final_context = f"{additional_context}\n\n해결 방법:\n{context}"
-    answer = generate_answer(response_message, final_context)
+    print(solution_text)
+    answer = generate_answer(response_message, solution_text)
     
     # 대화 기록에 추가
     from .conversation import conversation_manager

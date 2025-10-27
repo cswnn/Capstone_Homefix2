@@ -26,7 +26,7 @@ def generate_answer(question, context):
         """.strip()
 
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[
             { "role": "system", "content": "친절한 한국어 홈케어 전문가입니다."},
             {"role": "user", "content": prompt}
@@ -91,7 +91,7 @@ def is_specific_question(question, conversation_context=""):
 """.strip()
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "홈케어 질문의 구체성을 판단하는 전문가입니다. 이전 대화 내용을 고려하여 판단하고, '구체적' 또는 '애매함' 중 하나로만 답변합니다."},
             {"role": "user", "content": prompt}
@@ -126,7 +126,7 @@ def generate_clarification_question(question):
 """.strip()
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "홈케어 전문가로서 사용자에게 구체적인 정보를 요청하는 친근한 추가 질문을 생성합니다."},
             {"role": "user", "content": prompt}
@@ -178,7 +178,7 @@ def generate_natural_query(original_question, additional_info):
 """.strip()
 
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "사용자의 원래 질문과 추가 정보를 자연스럽고 명확한 하나의 질문으로 합치는 전문가입니다."},
             {"role": "user", "content": prompt}
@@ -240,7 +240,7 @@ def needs_context(question, conversation_context=""):
 """.strip()
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "대화 문맥 분석 전문가입니다. 질문이 이전 대화 내용을 참고해야 하는지 판단하고, '필요' 또는 '불필요' 중 하나로만 답변합니다."},
             {"role": "user", "content": prompt}
@@ -296,7 +296,7 @@ def generate_contextual_answer(question, conversation_context, search_context=""
 """.strip()
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "이전 대화 맥락을 정확히 이해하고 연결하여 답변하는 홈케어 전문가입니다."},
             {"role": "user", "content": prompt}
