@@ -25,21 +25,3 @@ git checkout -b [브랜치명]
 
 # 깃허브 푸시
 git push origin [브랜치명]
-search.py:
-* FAISS 인덱스 로딩
-* 문서 검색 수행
-* 임베딩 생성
-conversation.py:
-* 대화 상태 관리
-* 구체성 판단
-* 추가 질문 np생성
-* 문맥 유지
-generator.py:
-* GPT API 호출
-* 답변 생성
-* 구체성 판단
-* 추가 질문 생성
-main.py:
-* 메인 인터페이스
-* chat_with_ai() 함수
-* return_solution() 함수

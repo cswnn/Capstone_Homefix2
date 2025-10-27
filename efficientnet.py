@@ -1,21 +1,26 @@
-
 import torch
 import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from torchvision.transforms import InterpolationMode
 from PIL import Image
+import pandas as pd
+import os
+import timm
 from efficientnet_pytorch import EfficientNet
 
+from torchvision import models
 # ------------------------- 모델 정의 ------------------------- #
-class EfficientNetModel(nn.Module):
-    def __init__(self, num_labels, num_locations, model_name='efficientnet-b5'):
+# 1. EfficientNetV2Model 클래스 정의
+class EfficientNetV2Model(nn.Module):
+    def __init__(self, num_labels, num_locations, model_name='efficientnetv2_m'):
         super().__init__()
-        self.backbone = EfficientNet.from_name(model_name)
-        self.backbone._fc = nn.Identity()  # 기존 분류기 제거
+        self.backbone = models.efficientnet_v2_m(pretrained=True)
+        feature_dim = self.backbone.classifier[-1].in_features
 
-        feature_dim = self.backbone._conv_head.out_channels
-        self.pooling = nn.AdaptiveAvgPool2d(1)
-
+        # Head: 간단한 MLP + Dropout (특징 벡터를 바로 사용)
         self.label_head = nn.Sequential(
             nn.Linear(feature_dim, 256),
             nn.ReLU(),
@@ -31,10 +36,16 @@ class EfficientNetModel(nn.Module):
         )
 
     def forward(self, x):
-        features = self.backbone.extract_features(x)
-        pooled = self.pooling(features).flatten(start_dim=1)
-        label_out = self.label_head(pooled)
-        loc_out = self.loc_head(pooled)
+
+        original_classifier = self.backbone.classifier
+        self.backbone.classifier = nn.Identity()
+
+        features = self.backbone(x)
+
+        self.backbone.classifier = original_classifier
+
+        label_out = self.label_head(features)
+        loc_out = self.loc_head(features)
         return label_out, loc_out
 
 
@@ -42,32 +53,37 @@ class EfficientNetModel(nn.Module):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 location_map = {
-    '가구': 0, '가스레인지': 1, '냄비/후라이팬': 2, '배관류': 3, '부품': 4,
-    '세탁기': 5, '수전': 6, '스테인리스': 7, '식기류': 8, '싱크대': 9,
-    '에어컨': 10, '에어프라이어': 11, '오븐': 12, '욕실액세서리': 13, '유리': 14,
-    '인덕션': 15, '전자레인지': 16, '종이벽지': 17, '창틀/문틀': 18,
-    '타일/페인트벽': 19, '프레임': 20, '후드': 21
+    '가구': 0, '가스레인지': 1, '공구류': 2, '난간': 3, '냄비/후라이팬': 4,
+    '문틀': 5, '배관류': 6, '부품': 7, '세탁기': 8, '스테인리스류': 9,
+    '에어컨': 10, '유리': 11, '인덕션': 12, '종이벽지': 13, '주방가전': 14,
+    '타일': 15, '페인트벽': 16, '후드': 17
 }
 inv_location_map = {v: k for k, v in location_map.items()}
-problems = ['기름때', '곰팡이', '녹', '물때']
+problems = ['기름때', '곰팡이', '녹', '물때', '깨짐', '찢어짐', '스크래치']
 
 valid_location_scope = {
-    0: [1, 2, 8, 9, 11, 12, 15, 16, 17, 19, 21],  # grease
-    1: [5, 10, 17, 18, 19],  # mold
-    2: [0, 1, 3, 4, 6, 13, 20],  # rust
-    3: [6, 7, 14]  # water_stain
+    0: [1, 4, 9, 12, 13, 14, 15, 16, 17],   # grease
+    1: [5, 8, 10, 13, 15, 16],              # mold
+    2: [0, 1, 2, 3, 5, 6, 7, 9],            # rust
+    3: [9, 11],                             # water_stain
+    4: [11, 15],                            # crack
+    5: [13, 16],                            # tear
+    6: [0, 11, 15],                         # scratch
 }
 
 transform = transforms.Compose([
-    transforms.Resize((456, 456), interpolation=InterpolationMode.BILINEAR),
+    transforms.Resize((384, 384), interpolation=InterpolationMode.BILINEAR),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(15),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
     transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    transforms.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225])
 ])
 
 
 # ------------------------- 모델 로딩 ------------------------- #
 def load_model(weight_path='best_model.pt'):
-    model = EfficientNetModel(num_labels=4, num_locations=len(location_map))
+    model = EfficientNetV2Model(num_labels=7, num_locations=len(location_map))
     model.load_state_dict(torch.load(weight_path, map_location=device))
     model.to(device)
     model.eval()
