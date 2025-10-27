@@ -1,8 +1,6 @@
 from .search import load_search_index, search_documents
 from .generator import generate_answer, generate_contextual_answer
 from .conversation import process_user_message
-import numpy as np
-from sklearn.preprocessing import normalize
 import re
 import urllib.parse
 
@@ -14,19 +12,8 @@ def return_solution(label: str, loc: str):
     """이미지 분석 결과로 솔루션과 선택된 문제 제목(전체)을 반환"""
     question = f"{loc}에서 {label} 제거하는 법 알려줘."
 
-    # 문서 검색 (상위 후보 및 최상위 인덱스 추출)
-    query_embedding = retriever.encode([question], convert_to_tensor=False)
-    query_embedding = np.array(query_embedding).astype("float32")
-    query_embedding = normalize(query_embedding, norm='l2')
-
-    distances, labels = index.search(query_embedding, k=5)
-    best_dist = distances[0][0]
-    top_idx = int(labels[0][0]) if labels is not None and len(labels[0]) > 0 else -1
-
-    # 필터 기준 내 문서 구성 (기존 로직과 동일)
-    filtered_docs = [
-        docs[i] for i, dist in zip(labels[0], distances[0]) if dist <= best_dist + 0.05
-    ] if labels is not None and len(labels) > 0 else []
+    # 문서 검색
+    filtered_docs = search_documents(question, retriever, index, docs)
 
     # 문맥 구성
     context = "\n\n---\n\n".join(filtered_docs)
@@ -34,8 +21,12 @@ def return_solution(label: str, loc: str):
     # GPT로 해결책 생성
     answer = generate_answer(question, context)
 
-    # 최상위 매칭 문서의 문제 제목 (없으면 원래 label 사용)
-    selected_problem = problem_texts[top_idx] if 0 <= top_idx < len(problem_texts) else label
+    # 최상위 매칭 문서의 문제 제목 추출
+    selected_problem = label
+    if filtered_docs:
+        title_match = re.search(r"## 문제[:：](.+)", filtered_docs[0])
+        if title_match:
+            selected_problem = title_match.group(1).strip()
 
     return answer, selected_problem
 
@@ -52,11 +43,9 @@ def get_supplies_for_problem(problem_title: str):
     """problem_title로 섹션 찾아서 준비물 파싱"""
     try:
         idx = problem_texts.index(problem_title)
+        return parse_supplies_from_document(docs[idx])
     except ValueError:
         return [], []
-    
-    section = docs[idx]
-    return parse_supplies_from_document(section)
 
 def parse_supplies_from_document(doc_text: str) -> tuple[list[str], list[str]]:
     """문서에서 준비물(필수/선택) 파싱"""
@@ -127,67 +116,47 @@ def chat_with_ai(user_message: str):
         return {"response": answer, "is_specific": True}
     
     # 일반적인 최종 답변을 생성하는 경우
-    search_query = response_message
+    filtered_docs = search_documents(response_message, retriever, index, docs)
     
-    # 문서 검색
-    filtered_docs = search_documents(search_query, retriever, index, docs)
+    # 해결책 섹션 추출
+    solution_text = extract_solution_section(filtered_docs[0]) if filtered_docs else ""
     
-    # 가장 관련성 높은 문서에서 해결책 추출
-    solution_text = ""
-    
-    if filtered_docs:
-        # 첫 번째 문서에서 해결책 섹션만 추출
-        solution_text = extract_solution_section(filtered_docs[0])
-        
-        # 문제 제목 추출 (추가 보조 정보)
-        title_match = re.search(r"## 문제[:：](.+)", filtered_docs[0])
-        if title_match:
-            problem_title = title_match.group(1).strip()
-    
-    # 준비물 정보 추출 (문서에서 직접 파싱)
-    required_items, optional_items = [], []
-    if filtered_docs:
-        doc_text = filtered_docs[0]
-        required_items, optional_items = parse_supplies_from_document(doc_text)
+    # 준비물 정보 추출
+    required_items, optional_items = parse_supplies_from_document(filtered_docs[0]) if filtered_docs else ([], [])
     
     # 준비물 검색 링크 생성
-    supply_links = []
-    for item in required_items:
-        supply_links.append({
+    supply_links = [
+        {
             "keyword": item,
             "type": "필수",
             "link": f"https://search.shopping.naver.com/search/all?query={urllib.parse.quote(item)}"
-        })
-    for item in optional_items:
-        supply_links.append({
+        }
+        for item in required_items
+    ] + [
+        {
             "keyword": item,
             "type": "선택",
             "link": f"https://search.shopping.naver.com/search/all?query={urllib.parse.quote(item)}"
-        })
+        }
+        for item in optional_items
+    ]
     
-    # 문맥 구성
-    context = "\n\n---\n\n".join(filtered_docs)
+    # 문맥 구성 (해결책 섹션만 사용)
+    context = solution_text if solution_text else "\n\n---\n\n".join(filtered_docs)
     
-    # 추가 컨텍스트 정보
-    additional_context = f"""
-    사용자 질문: {search_query}
+    # 컨텍스트 정보
+    additional_context = f"""사용자 질문: {response_message}
+
+위의 해결 방법을 참고하여 다음을 포함한 답변을 제공해주세요:
+- 안전을 최우선으로 고려한 조언
+- 단계별 해결 방법
+- 전문가 상담이 필요한 경우 언급"""
     
-    위의 관련 문서들을 참고하여 다음을 포함한 답변을 제공해주세요:
-    - 안전을 최우선으로 고려한 조언
-    - 단계별 해결 방법
-    - 전문가 상담이 필요한 경우 언급
+    # GPT로 응답 생성
+    final_context = f"{additional_context}\n\n해결 방법:\n{context}"
+    answer = generate_answer(response_message, final_context)
     
-    ⚠️ 중요: 준비물이나 필요한 도구/재료를 직접 언급하지 마세요. 
-    준비물은 별도로 제공됩니다.
-    """
-    
-    # 최종 컨텍스트 결합
-    final_context = f"{additional_context}\n\n관련 문서:\n{context}"
-    
-    # GPT로 응답 생성 (짧게)
-    answer = generate_answer(search_query, final_context)
-    
-    # 대화 기록에 최종 답변 추가
+    # 대화 기록에 추가
     from .conversation import conversation_manager
     conversation_manager.add_to_history(response_message, answer)
     

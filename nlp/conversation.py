@@ -1,5 +1,5 @@
-from typing import Dict, List, Tuple, Optional
-from .generator import is_specific_question, generate_clarification_question, needs_context, generate_contextual_answer, generate_natural_query
+from typing import Tuple
+from .generator import is_specific_question, generate_clarification_question, needs_context, generate_natural_query
 
 class ConversationManager:
     """대화 상태 관리 클래스 - 문맥 유지"""
@@ -42,32 +42,21 @@ class ConversationManager:
 # 전역 대화 관리자
 conversation_manager = ConversationManager()
 
-def is_specific_content(user_message: str, context: Optional[str] = None) -> Tuple[bool, Optional[str]]:
+def is_specific_content(user_message: str) -> Tuple[bool, str]:
     """
     메시지가 구체적인지 판단 (GPT 기반)
     """
-    
-    # 모든 경우 GPT 기반 구체성 판단
-    is_specific = gpt_based_specificity(user_message, context)
-    
-    if is_specific:
-        return True, "specific"
-    else:
-        return False, "general"
-
-def gpt_based_specificity(user_message: str, context: Optional[str] = None):
-    """GPT를 사용한 구체성 판단 (문맥 고려)"""
     try:
         conversation_context = conversation_manager.get_conversation_context()
         is_specific = is_specific_question(user_message, conversation_context)
         
-        return is_specific
+        return (True, "specific") if is_specific else (False, "general")
     except Exception as e:
         print(f"GPT 구체성 판단 중 에러 발생: {e}")
         # 에러 발생 시 기본적으로 구체적이라고 판단 (fallback)
-        return True
+        return True, "specific"
 
-def generate_clarification_question_gpt(user_message: str, question_type: str) -> str:
+def generate_clarification_question_gpt(user_message: str) -> str:
     """GPT를 사용한 추가 질문 생성"""
     # 원본 질문 저장
     conversation_manager.user_original_question = user_message
@@ -142,7 +131,7 @@ def process_user_message(user_message: str, is_new_topic: bool = False) -> Tuple
         return user_message, True, True  # 문맥 필요 플래그 True
     
     # 문맥이 필요하지 않은 경우 기존 로직
-    is_specific, question_type = is_specific_content(user_message)
+    is_specific, _ = is_specific_content(user_message)
     
     if is_specific:
         # 구체적인 질문이므로 바로 처리
@@ -150,6 +139,6 @@ def process_user_message(user_message: str, is_new_topic: bool = False) -> Tuple
         return user_message, True, False
     else:
         # 구체적이지 않은 질문이므로 추가 질문 생성
-        clarification_question = generate_clarification_question_gpt(user_message, question_type)
+        clarification_question = generate_clarification_question_gpt(user_message)
         conversation_manager.add_to_history(user_message, clarification_question)
         return clarification_question, False, False
