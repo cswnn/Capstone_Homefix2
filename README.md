@@ -22,7 +22,7 @@
 * **AI Model**: EfficientNetV2-m
 
 ## 🖥️ Preview
-![01 사진으로 물어보기](./)
+![주기능 01 사진으로 물어보기](./assets/demo/homefix_demo_01.gif)
 
 ## 🌟 Key Features & Implementation
 1. AI 기반 이미지 분석
