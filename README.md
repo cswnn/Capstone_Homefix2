@@ -22,7 +22,7 @@
 * **AI Model**: EfficientNetV2-m
 
 ## 🖥️ Preview
-앱은 시각적인 결과물(GIF or 이미지)
+![01 사진으로 물어보기](./)
 
 ## 🌟 Key Features & Implementation
 1. AI 기반 이미지 분석
