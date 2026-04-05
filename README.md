@@ -1,97 +1,51 @@
-# Welcome to your Expo app 👋
+## 🏠 HomeFix (캡스톤 디자인 프로젝트)
+&emsp; 사용자의 주거 환경 문제를 진단하고 해결책을 제시하는 AI 기반 홈 케어 서비스
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 📌 Project Overview
+* 개발 기간: 2025.03 - 2025.12 (졸업 작품)
+* 주요 기능:
+   * AI 이미지 분석을 통한 문제 진단 및 해결책 제공
+   * ChatBot과의 채팅을 통한 문제 진단 및 해결책 제공
+   * 필요 준비물을 위한 제품 추천 링크 제공
+* **핵심 목표**: 전문가의 도움 없이도 초보자가 주거 문제를 쉽게 해결할 수 있는 플랫폼 구축
 
-## Get started
 
-1. Install node package dependencies
+## 🛠️ Tech Stack
+**Frontend**
+* **Framework**: Expo (React Native)
+* **State Management**: React Hooks (useState, useEffect)
+* **Navigation**: React Navigation
 
-   ```bash
-   npm install
-   ```
+**Backend & AI**
+* **Server**: Flask (Python)
+* **Database/Auth**: Firebase (Authentication, Realtime Database)
+* **AI Model**: EfficientNetV2-m
 
-   > package.json 파일의 모든 nodejs 의존성 패키지를 다운로드하는 명령어.
+## 🖥️ Preview
+![01 사진으로 물어보기](./)
 
-2. install python and its requirements
+## 🌟 Key Features & Implementation
+1. AI 기반 이미지 분석
+   * 사용자가 촬영한 사진을 Flask 서버로 전송하여 하자의 종류와 심각도를 분석합니다.
+   * 두 단계에 걸친 문제 분류: 문제 유형 예측 모델(1개) + 문제 위치 예측 모델(7개)
+2. 실시간 데이터 연동
+   * Firebase를 활용하여 사용자 정보 및 진단 기록을 실시간으로 관리합니다.
+3. 사용자 친화적 UI/UX
+   * Expo를 활용하여 iOS와 Android 환경에서 동일한 사용자 경험을 제공하도록 설계되었습니다.
+  
+## ⚙️ Installation & Setup
+실행에 필요한 세팅
 
-   > Note - 파이썬 3.10 버전이 설치되어 있어야 합니다. `py -3.10 -m venv [name]` 명령어로 가상 환경을 만들 수 있습니다.
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. 환경 변수 설정
-
-   프로젝트 루트에 `.env` 파일을 생성하고 다음 내용을 추가하세요:
-
-   ```
-   # API Keys Configuration
-   # 이 파일은 절대 Git에 업로드하지 마세요!
-
-   # Google Custom Search API 설정
-   GOOGLE_SEARCH_API_KEY=your_google_search_api_key_here
-   GOOGLE_SEARCH_ENGINE_ID=your_google_search_engine_id_here
-
-   # OpenAI API 키 (NLP 기능용)
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
-
-   **중요**: `.env` 파일은 이미 `.gitignore`에 포함되어 있어 Git에 업로드되지 않습니다.
-   
-r
-   **API 키 발급 방법:**
-   
-   **Google Custom Search API:**
-   1. [Google Cloud Console](https://console.cloud.google.com/apis/library/customsearch.googleapis.com)에서 Custom Search API를 활성화
-   2. API 키를 발급받아 `.env` 파일의 `GOOGLE_SEARCH_API_KEY`에 설정
-   3. [Google Custom Search Engine](https://cse.google.com/cse/all)에서 검색 엔진을 생성
-   4. 검색 엔진 ID를 복사하여 `.env` 파일의 `GOOGLE_SEARCH_ENGINE_ID`에 설정
-   
-   **OpenAI API:**
-   1. [OpenAI Platform](https://platform.openai.com/api-keys)에서 API 키 발급
-   2. 발급받은 키를 `.env` 파일의 `OPENAI_API_KEY`에 설정
-
-4. Start the backend server
-   ```bash
-   python app.py
-   # 또는
-   uvicorn app:app --host 0.0.0.0 --port 8000 --reload
-   ```
-
-5. Start the expo app
-   ```sh
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+## 📁 Project Structure
+```
+├── assets/             # 이미지 및 정적 자원
+├── components/         # 재사용 가능한 UI 컴포넌트
+├── screens/            # 각 페이지 구성 (Main, Diagnosis, Community 등)
+├── App.js              # 엔트리 포인트 및 네비게이션 설정
+└── app.json            # Expo 설정 파일
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 💡 Troubleshooting & Lessons Learned
+* 이슈:
+* 해결:
+* 성과: 
